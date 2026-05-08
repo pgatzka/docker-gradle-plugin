@@ -6,44 +6,39 @@ import java.util.List;
 
 public class Mounts {
 
-  public record VolumeMount(String volumeName, String containerPath, boolean readOnly) {
+    private final List<VolumeMount> volumes = new ArrayList<>();
 
-  }
+    private final List<BindMount> binds = new ArrayList<>();
 
-  public record BindMount(String hostPath, String containerPath, boolean readOnly) {
+    public void volume(String volumeName, String containerPath) {
+        volume(volumeName, containerPath, false);
+    }
 
-  }
+    public void volume(String volumeName, String containerPath, boolean readOnly) {
+        volumes.add(new VolumeMount(volumeName, containerPath, readOnly));
+    }
 
-  private final List<VolumeMount> volumes = new ArrayList<>();
+    public void bind(String hostPath, String containerPath) {
+        bind(hostPath, containerPath, false);
+    }
 
-  private final List<BindMount> binds = new ArrayList<>();
+    public void bind(String hostPath, String containerPath, boolean readOnly) {
+        binds.add(new BindMount(hostPath, containerPath, readOnly));
+    }
 
-  public void volume(String volumeName, String containerPath) {
-    volume(volumeName, containerPath, false);
-  }
+    public List<VolumeMount> volumes() {
+        return Collections.unmodifiableList(volumes);
+    }
 
-  public void volume(String volumeName, String containerPath, boolean readOnly) {
-    volumes.add(new VolumeMount(volumeName, containerPath, readOnly));
-  }
+    public List<BindMount> binds() {
+        return Collections.unmodifiableList(binds);
+    }
 
-  public void bind(String hostPath, String containerPath) {
-    bind(hostPath, containerPath, false);
-  }
+    public List<String> referencedVolumeNames() {
+        return volumes.stream().map(VolumeMount::volumeName).toList();
+    }
 
-  public void bind(String hostPath, String containerPath, boolean readOnly) {
-    binds.add(new BindMount(hostPath, containerPath, readOnly));
-  }
+    public record VolumeMount(String volumeName, String containerPath, boolean readOnly) {}
 
-  public List<VolumeMount> volumes() {
-    return Collections.unmodifiableList(volumes);
-  }
-
-  public List<BindMount> binds() {
-    return Collections.unmodifiableList(binds);
-  }
-
-  public List<String> referencedVolumeNames() {
-    return volumes.stream().map(VolumeMount::volumeName).toList();
-  }
-
+    public record BindMount(String hostPath, String containerPath, boolean readOnly) {}
 }

@@ -1,6 +1,7 @@
 plugins {
     id("java-gradle-plugin")
     id("com.gradle.plugin-publish") version "2.1.1"
+    id("com.diffplug.spotless") version "8.4.0"
     id("jvm-test-suite")
 }
 
@@ -72,4 +73,10 @@ gradlePlugin {
 
 tasks.named("check") {
     dependsOn(testing.suites.named("functionalTest"))
+}
+
+spotless {
+    java {
+        palantirJavaFormat()
+    }
 }

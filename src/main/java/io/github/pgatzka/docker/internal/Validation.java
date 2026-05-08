@@ -8,33 +8,29 @@ import org.gradle.api.GradleException;
 
 public final class Validation {
 
-  private Validation() {
-  }
+    private Validation() {}
 
-  public static void validate(DockerExtension ext) {
-    Set<String> declaredVolumes = new HashSet<>();
-    ext.getVolumes().forEach(v -> declaredVolumes.add(v.getName()));
-    Set<String> declaredNetworks = new HashSet<>();
-    ext.getNetworks().forEach((NetworkSpec n) -> declaredNetworks.add(n.getName()));
+    public static void validate(DockerExtension ext) {
+        Set<String> declaredVolumes = new HashSet<>();
+        ext.getVolumes().forEach(v -> declaredVolumes.add(v.getName()));
+        Set<String> declaredNetworks = new HashSet<>();
+        ext.getNetworks().forEach((NetworkSpec n) -> declaredNetworks.add(n.getName()));
 
-    ext.getContainers().forEach(c -> {
-      for (var vm : c.getMounts().volumes()) {
-        if (!declaredVolumes.contains(vm.volumeName())) {
-          throw new GradleException(
-              "Container " + c.getName() + " references undeclared volume "
-                  + vm.volumeName() + ". Declare it in volumes { register(\""
-                  + vm.volumeName() + "\") {} }.");
-        }
-      }
-      for (String n : c.getNetworks().getOrElse(java.util.List.of())) {
-        if (!declaredNetworks.contains(n)) {
-          throw new GradleException(
-              "Container " + c.getName() + " references undeclared network "
-                  + n + ". Declare it in networks { register(\""
-                  + n + "\") {} }.");
-        }
-      }
-    });
-  }
-
+        ext.getContainers().forEach(c -> {
+            for (var vm : c.getMounts().volumes()) {
+                if (!declaredVolumes.contains(vm.volumeName())) {
+                    throw new GradleException("Container " + c.getName() + " references undeclared volume "
+                            + vm.volumeName() + ". Declare it in volumes { register(\""
+                            + vm.volumeName() + "\") {} }.");
+                }
+            }
+            for (String n : c.getNetworks().getOrElse(java.util.List.of())) {
+                if (!declaredNetworks.contains(n)) {
+                    throw new GradleException("Container " + c.getName() + " references undeclared network "
+                            + n + ". Declare it in networks { register(\""
+                            + n + "\") {} }.");
+                }
+            }
+        });
+    }
 }

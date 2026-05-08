@@ -1,14 +1,10 @@
 package io.github.pgatzka.docker.task;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.*;
+
 import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.command.CreateContainerCmd;
-import com.github.dockerjava.api.command.CreateContainerResponse;
-import com.github.dockerjava.api.command.InspectContainerCmd;
-import com.github.dockerjava.api.command.InspectContainerResponse;
-import com.github.dockerjava.api.command.InspectImageCmd;
-import com.github.dockerjava.api.command.InspectImageResponse;
-import com.github.dockerjava.api.command.ListImagesCmd;
-import com.github.dockerjava.api.command.StartContainerCmd;
+import com.github.dockerjava.api.command.*;
 import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.Image;
 import io.github.pgatzka.docker.dsl.PullPolicy;
@@ -20,103 +16,110 @@ import org.gradle.api.GradleException;
 import org.gradle.api.logging.Logger;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.RETURNS_SELF;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 class StartContainerTaskTest {
 
-  @Test
-  void failsWhenImageDeclaresNoHealthcheckAndStrategyIsHealthcheck() {
-    DockerClient c = mock(DockerClient.class);
+    private static InspectContainerResponse mockRunningContainer() {
+        InspectContainerResponse r = mock(InspectContainerResponse.class);
+        InspectContainerResponse.ContainerState s = mock(InspectContainerResponse.ContainerState.class);
+        when(r.getState()).thenReturn(s);
+        when(s.getRunning()).thenReturn(true);
+        when(s.getStatus()).thenReturn("running");
+        return r;
+    }
 
-    // Pull skipped (IF_NOT_PRESENT, image present)
-    ListImagesCmd listImg = mock(ListImagesCmd.class, RETURNS_SELF);
-    Image img = mock(Image.class);
-    when(c.listImagesCmd()).thenReturn(listImg);
-    when(listImg.exec()).thenReturn(List.of(img));
-    when(img.getRepoTags()).thenReturn(new String[]{"postgres:18-alpine"});
+    @Test
+    void failsWhenImageDeclaresNoHealthcheckAndStrategyIsHealthcheck() {
+        DockerClient c = mock(DockerClient.class);
 
-    // Image inspect: no healthcheck
-    InspectImageCmd insImg = mock(InspectImageCmd.class);
-    InspectImageResponse insImgResp = mock(InspectImageResponse.class);
-    com.github.dockerjava.api.model.ContainerConfig cfg =
-        mock(com.github.dockerjava.api.model.ContainerConfig.class);
-    when(c.inspectImageCmd("postgres:18-alpine")).thenReturn(insImg);
-    when(insImg.exec()).thenReturn(insImgResp);
-    when(insImgResp.getConfig()).thenReturn(cfg);
-    when(cfg.getHealthcheck()).thenReturn(null);
+        // Pull skipped (IF_NOT_PRESENT, image present)
+        ListImagesCmd listImg = mock(ListImagesCmd.class, RETURNS_SELF);
+        Image img = mock(Image.class);
+        when(c.listImagesCmd()).thenReturn(listImg);
+        when(listImg.exec()).thenReturn(List.of(img));
+        when(img.getRepoTags()).thenReturn(new String[] {"postgres:18-alpine"});
 
-    StartContainerTask.Params p = new StartContainerTask.Params(
-        "c", "postgres:18-alpine",
-        Map.of(), Map.of(), List.of(), List.of(), List.of(), List.of(),
-        WaitFor.healthcheck(), Duration.ofSeconds(10),
-        PullPolicy.IF_NOT_PRESENT);
+        // Image inspect: no healthcheck
+        InspectImageCmd insImg = mock(InspectImageCmd.class);
+        InspectImageResponse insImgResp = mock(InspectImageResponse.class);
+        com.github.dockerjava.api.model.ContainerConfig cfg =
+                mock(com.github.dockerjava.api.model.ContainerConfig.class);
+        when(c.inspectImageCmd("postgres:18-alpine")).thenReturn(insImg);
+        when(insImg.exec()).thenReturn(insImgResp);
+        when(insImgResp.getConfig()).thenReturn(cfg);
+        when(cfg.getHealthcheck()).thenReturn(null);
 
-    assertThatThrownBy(() -> StartContainerTask.run(c, p, mock(Logger.class)))
-        .isInstanceOf(GradleException.class)
-        .hasMessageContaining("declares no HEALTHCHECK")
-        .hasMessageContaining("postgres:18-alpine");
-  }
+        StartContainerTask.Params p = new StartContainerTask.Params(
+                "c",
+                "postgres:18-alpine",
+                Map.of(),
+                Map.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                WaitFor.healthcheck(),
+                Duration.ofSeconds(10),
+                PullPolicy.IF_NOT_PRESENT);
 
-  @Test
-  void createsThenStartsWhenContainerAbsent() {
-    DockerClient c = mock(DockerClient.class);
+        assertThatThrownBy(() -> StartContainerTask.run(c, p, mock(Logger.class)))
+                .isInstanceOf(GradleException.class)
+                .hasMessageContaining("declares no HEALTHCHECK")
+                .hasMessageContaining("postgres:18-alpine");
+    }
 
-    // Image present
-    ListImagesCmd listImg = mock(ListImagesCmd.class, RETURNS_SELF);
-    Image img = mock(Image.class);
-    when(c.listImagesCmd()).thenReturn(listImg);
-    when(listImg.exec()).thenReturn(List.of(img));
-    when(img.getRepoTags()).thenReturn(new String[]{"hello-world:latest"});
+    @Test
+    void createsThenStartsWhenContainerAbsent() {
+        DockerClient c = mock(DockerClient.class);
 
-    // Image inspect: healthcheck not required because waitFor=none
-    // (still fetched for logging — return a stub)
-    InspectImageCmd insImg = mock(InspectImageCmd.class);
-    InspectImageResponse insImgResp = mock(InspectImageResponse.class);
-    when(c.inspectImageCmd("hello-world:latest")).thenReturn(insImg);
-    when(insImg.exec()).thenReturn(insImgResp);
+        // Image present
+        ListImagesCmd listImg = mock(ListImagesCmd.class, RETURNS_SELF);
+        Image img = mock(Image.class);
+        when(c.listImagesCmd()).thenReturn(listImg);
+        when(listImg.exec()).thenReturn(List.of(img));
+        when(img.getRepoTags()).thenReturn(new String[] {"hello-world:latest"});
 
-    // Container does not exist -> first inspect throws NotFound
-    InspectContainerCmd insCnt = mock(InspectContainerCmd.class);
-    when(c.inspectContainerCmd("c")).thenReturn(insCnt);
-    when(insCnt.exec())
-        .thenThrow(new NotFoundException("nope"))
-        // After create+start: state running
-        .thenReturn(mockRunningContainer());
+        // Image inspect: healthcheck not required because waitFor=none
+        // (still fetched for logging — return a stub)
+        InspectImageCmd insImg = mock(InspectImageCmd.class);
+        InspectImageResponse insImgResp = mock(InspectImageResponse.class);
+        when(c.inspectImageCmd("hello-world:latest")).thenReturn(insImg);
+        when(insImg.exec()).thenReturn(insImgResp);
 
-    // Create
-    CreateContainerCmd create = mock(CreateContainerCmd.class, RETURNS_SELF);
-    CreateContainerResponse createResp = mock(CreateContainerResponse.class);
-    when(c.createContainerCmd("hello-world:latest")).thenReturn(create);
-    when(create.exec()).thenReturn(createResp);
-    when(createResp.getId()).thenReturn("cid");
+        // Container does not exist -> first inspect throws NotFound
+        InspectContainerCmd insCnt = mock(InspectContainerCmd.class);
+        when(c.inspectContainerCmd("c")).thenReturn(insCnt);
+        when(insCnt.exec())
+                .thenThrow(new NotFoundException("nope"))
+                // After create+start: state running
+                .thenReturn(mockRunningContainer());
 
-    // Start
-    StartContainerCmd start = mock(StartContainerCmd.class);
-    when(c.startContainerCmd("c")).thenReturn(start);
+        // Create
+        CreateContainerCmd create = mock(CreateContainerCmd.class, RETURNS_SELF);
+        CreateContainerResponse createResp = mock(CreateContainerResponse.class);
+        when(c.createContainerCmd("hello-world:latest")).thenReturn(create);
+        when(create.exec()).thenReturn(createResp);
+        when(createResp.getId()).thenReturn("cid");
 
-    StartContainerTask.Params p = new StartContainerTask.Params(
-        "c", "hello-world:latest",
-        Map.of(), Map.of(), List.of(), List.of(), List.of(), List.of(),
-        WaitFor.none(), Duration.ofSeconds(10),
-        PullPolicy.IF_NOT_PRESENT);
+        // Start
+        StartContainerCmd start = mock(StartContainerCmd.class);
+        when(c.startContainerCmd("c")).thenReturn(start);
 
-    StartContainerTask.run(c, p, mock(Logger.class));
+        StartContainerTask.Params p = new StartContainerTask.Params(
+                "c",
+                "hello-world:latest",
+                Map.of(),
+                Map.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                WaitFor.none(),
+                Duration.ofSeconds(10),
+                PullPolicy.IF_NOT_PRESENT);
 
-    verify(create).withName("c");
-    verify(start).exec();
-  }
+        StartContainerTask.run(c, p, mock(Logger.class));
 
-  private static InspectContainerResponse mockRunningContainer() {
-    InspectContainerResponse r = mock(InspectContainerResponse.class);
-    InspectContainerResponse.ContainerState s = mock(InspectContainerResponse.ContainerState.class);
-    when(r.getState()).thenReturn(s);
-    when(s.getRunning()).thenReturn(true);
-    when(s.getStatus()).thenReturn("running");
-    return r;
-  }
-
+        verify(create).withName("c");
+        verify(start).exec();
+    }
 }

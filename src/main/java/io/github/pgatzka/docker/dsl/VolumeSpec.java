@@ -7,23 +7,22 @@ import org.gradle.api.provider.Property;
 
 public abstract class VolumeSpec implements Named {
 
-  private final String name;
+    private final String name;
 
-  @Inject
-  public VolumeSpec(String name) {
-    this.name = name;
-    getDriver().convention("local");
-  }
+    @Inject
+    public VolumeSpec(String name) {
+        this.name = name;
+        getDriver().convention("local");
+    }
 
-  @Override
-  public String getName() {
-    return name;
-  }
+    @Override
+    public String getName() {
+        return name;
+    }
 
-  public abstract Property<String> getDriver();
+    public abstract Property<String> getDriver();
 
-  public abstract MapProperty<String, String> getDriverOpts();
+    public abstract MapProperty<String, String> getDriverOpts();
 
-  public abstract MapProperty<String, String> getLabels();
-
+    public abstract MapProperty<String, String> getLabels();
 }

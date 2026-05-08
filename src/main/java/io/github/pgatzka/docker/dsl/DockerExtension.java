@@ -4,10 +4,9 @@ import org.gradle.api.NamedDomainObjectContainer;
 
 public interface DockerExtension {
 
-  NamedDomainObjectContainer<ContainerSpec> getContainers();
+    NamedDomainObjectContainer<ContainerSpec> getContainers();
 
-  NamedDomainObjectContainer<VolumeSpec> getVolumes();
+    NamedDomainObjectContainer<VolumeSpec> getVolumes();
 
-  NamedDomainObjectContainer<NetworkSpec> getNetworks();
-
+    NamedDomainObjectContainer<NetworkSpec> getNetworks();
 }
