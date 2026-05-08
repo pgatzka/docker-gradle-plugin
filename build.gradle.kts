@@ -2,9 +2,9 @@ plugins {
     id("java-gradle-plugin")
     id("com.gradle.plugin-publish") version "2.1.1"
     id("com.diffplug.spotless") version "8.4.0"
-    id("org.sonarqube") version "5.1.0.4882"
+    id("org.sonarqube") version "7.3.0.8198"
     id("jvm-test-suite")
-    jacoco
+    id("jacoco")
 }
 
 group = "io.github.pgatzka"
@@ -25,8 +25,24 @@ dependencies {
     implementation("com.github.docker-java:docker-java-transport-httpclient5:3.7.1")
 }
 
-@Suppress("UnstableApiUsage")
-testing {
+spotless {
+    java {
+        palantirJavaFormat()
+    }
+}
+
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+sonar {
+    properties {
+        property("sonar.projectKey", "io.github.pgatzka.docker:docker-gradle-plugin")
+        property("sonar.organization", "pgatzka")
+    }
+}
+
+@Suppress("UnstableApiUsage") testing {
     suites {
         val test by getting(JvmTestSuite::class) {
             useJUnitJupiter("5.10.2")
@@ -58,6 +74,36 @@ testing {
     }
 }
 
+tasks {
+    jacocoTestCoverageVerification {
+        dependsOn(jacocoTestReport)
+        violationRules {
+            rule {
+                limit {
+                    minimum = BigDecimal.valueOf(0.8)
+                }
+            }
+        }
+    }
+    jacocoTestReport {
+        dependsOn(test)
+        reports {
+            xml.required.set(true)
+            html.required.set(true)
+        }
+        mustRunAfter(test)
+    }
+    named<org.sonarqube.gradle.SonarTask>("sonar") {
+        dependsOn(jacocoTestReport)
+    }
+    @Suppress("UnstableApiUsage") check {
+        dependsOn(testing.suites.named("functionalTest"))
+    }
+    test {
+        finalizedBy(jacocoTestReport)
+    }
+}
+
 gradlePlugin {
     website.set("https://github.com/pgatzka/docker-gradle-plugin")
     vcsUrl.set("https://github.com/pgatzka/docker-gradle-plugin.git")
@@ -71,42 +117,4 @@ gradlePlugin {
         }
     }
     testSourceSets(sourceSets["functionalTest"])
-}
-
-tasks.named("check") {
-    dependsOn(testing.suites.named("functionalTest"))
-}
-
-spotless {
-    java {
-        palantirJavaFormat()
-    }
-}
-
-jacoco {
-    toolVersion = "0.8.12"
-}
-
-tasks.named<JacocoReport>("jacocoTestReport") {
-    dependsOn(tasks.named("test"))
-    reports {
-        xml.required.set(true)
-        html.required.set(true)
-    }
-}
-
-sonar {
-    properties {
-        property("sonar.projectKey", "pgatzka_docker-gradle-plugin")
-        property("sonar.organization", "pgatzka")
-        property("sonar.host.url", "https://sonarcloud.io")
-        property(
-            "sonar.coverage.jacoco.xmlReportPaths",
-            layout.buildDirectory.file("reports/jacoco/test/jacocoTestReport.xml").get().asFile.path,
-        )
-    }
-}
-
-tasks.named("sonar") {
-    dependsOn(tasks.named("jacocoTestReport"))
 }
