@@ -3,6 +3,7 @@ package io.github.pgatzka.docker.task;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.exception.NotFoundException;
+import com.github.dockerjava.api.exception.NotModifiedException;
 import java.time.Duration;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.Property;
@@ -26,7 +27,13 @@ public abstract class StopContainerTask extends DockerTask {
             return;
         }
         log.info("Stopping container {} (timeout={}s)", name, timeout.toSeconds());
-        c.stopContainerCmd(name).withTimeout((int) timeout.toSeconds()).exec();
+        try {
+            c.stopContainerCmd(name).withTimeout((int) timeout.toSeconds()).exec();
+        } catch (NotModifiedException nm) {
+            // Container exited between our inspect and the stop call (HTTP 304). Benign.
+            log.info("Container {} exited before stop completed", name);
+            return;
+        }
         log.info("Stopped container {}", name);
     }
 

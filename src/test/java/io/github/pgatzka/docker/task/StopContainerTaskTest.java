@@ -7,6 +7,7 @@ import com.github.dockerjava.api.command.InspectContainerCmd;
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.command.StopContainerCmd;
 import com.github.dockerjava.api.exception.NotFoundException;
+import com.github.dockerjava.api.exception.NotModifiedException;
 import java.time.Duration;
 import org.gradle.api.logging.Logger;
 import org.junit.jupiter.api.Test;
@@ -57,5 +58,28 @@ class StopContainerTaskTest {
 
         StopContainerTask.run(c, "c", Duration.ofSeconds(5), mock(Logger.class));
         verify(c, never()).stopContainerCmd("c");
+    }
+
+    @Test
+    void noOpWhenContainerExitsBetweenInspectAndStop() {
+        // Race: container is running at inspect time, but exits on its own before
+        // stopContainerCmd reaches the daemon. Docker returns HTTP 304 ->
+        // docker-java throws NotModifiedException. The stop must be idempotent.
+        DockerClient c = mock(DockerClient.class);
+        InspectContainerCmd ins = mock(InspectContainerCmd.class);
+        InspectContainerResponse resp = mock(InspectContainerResponse.class);
+        InspectContainerResponse.ContainerState st = mock(InspectContainerResponse.ContainerState.class);
+        StopContainerCmd stop = mock(StopContainerCmd.class, RETURNS_SELF);
+
+        when(c.inspectContainerCmd("c")).thenReturn(ins);
+        when(ins.exec()).thenReturn(resp);
+        when(resp.getState()).thenReturn(st);
+        when(st.getRunning()).thenReturn(true);
+        when(c.stopContainerCmd("c")).thenReturn(stop);
+        doThrow(new NotModifiedException("304")).when(stop).exec();
+
+        // Must not propagate — the race is a benign no-op.
+        StopContainerTask.run(c, "c", Duration.ofSeconds(5), mock(Logger.class));
+        verify(stop).exec();
     }
 }
