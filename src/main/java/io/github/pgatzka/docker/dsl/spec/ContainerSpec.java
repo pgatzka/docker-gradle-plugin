@@ -1,8 +1,11 @@
-package io.github.pgatzka.docker.dsl;
+package io.github.pgatzka.docker.dsl.spec;
 
 import java.time.Duration;
 import javax.inject.Inject;
 
+import io.github.pgatzka.docker.dsl.Mounts;
+import io.github.pgatzka.docker.dsl.PullPolicy;
+import io.github.pgatzka.docker.dsl.waitable.Waitable;
 import lombok.Getter;
 import org.gradle.api.Action;
 import org.gradle.api.Named;
@@ -24,7 +27,7 @@ public abstract class ContainerSpec implements Named {
         // None by default: most images do not declare a HEALTHCHECK, so this avoids a
         // surprising fail-loud when the consumer forgets to opt into a strategy. Users
         // who want healthcheck-based readiness call `waitFor.set(WaitFor.healthcheck())`.
-        getWaitFor().convention(WaitFor.none());
+        getWait().convention(Waitable.none());
         getWaitTimeout().convention(Duration.ofSeconds(60));
         getStopTimeout().convention(Duration.ofSeconds(10));
         getPullPolicy().convention(PullPolicy.IF_NOT_PRESENT);
@@ -46,7 +49,7 @@ public abstract class ContainerSpec implements Named {
 
     public abstract ListProperty<String> getCommand();
 
-    public abstract Property<WaitFor> getWaitFor();
+    public abstract Property<Waitable> getWait();
 
     public abstract Property<Duration> getWaitTimeout();
 

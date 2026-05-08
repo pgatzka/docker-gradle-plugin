@@ -26,7 +26,7 @@ docker {
                 volume("pgdata", "/var/lib/postgresql/data")
                 bind("./sql", "/docker-entrypoint-initdb.d", readOnly = true)
             }
-            waitFor.set(io.github.pgatzka.docker.dsl.WaitFor.tcpPort(5432))
+            waitable.set(io.github.pgatzka.docker.dsl.waitable.Waitable.tcpPort(5432))
         }
     }
 }

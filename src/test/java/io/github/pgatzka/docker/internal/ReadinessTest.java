@@ -58,7 +58,7 @@ class ReadinessTest {
         when(health.getStatus()).thenReturn("starting");
 
         assertThatThrownBy(() -> Readiness.healthcheck(c, "cid", Duration.ofMillis(50), Duration.ofMillis(10)))
-                .isInstanceOf(Readiness.NotReadyException.class)
+                .isInstanceOf(NotReadyException.class)
                 .hasMessageContaining("not healthy within");
     }
 
@@ -71,7 +71,7 @@ class ReadinessTest {
         when(cmd.exec()).thenThrow(new NotFoundException("no such container"));
 
         assertThatThrownBy(() -> Readiness.healthcheck(c, "cid", Duration.ofSeconds(1), Duration.ofMillis(10)))
-                .isInstanceOf(Readiness.NotReadyException.class)
+                .isInstanceOf(NotReadyException.class)
                 .hasMessageContaining("disappeared while waiting for health");
     }
 
@@ -88,7 +88,7 @@ class ReadinessTest {
         when(state.getHealth()).thenReturn(null);
 
         assertThatThrownBy(() -> Readiness.healthcheck(c, "cid", Duration.ofMillis(50), Duration.ofMillis(10)))
-                .isInstanceOf(Readiness.NotReadyException.class)
+                .isInstanceOf(NotReadyException.class)
                 .hasMessageContaining("not healthy within");
     }
 
@@ -103,7 +103,7 @@ class ReadinessTest {
         when(resp.getState()).thenReturn(null);
 
         assertThatThrownBy(() -> Readiness.healthcheck(c, "cid", Duration.ofMillis(50), Duration.ofMillis(10)))
-                .isInstanceOf(Readiness.NotReadyException.class)
+                .isInstanceOf(NotReadyException.class)
                 .hasMessageContaining("not healthy within");
     }
 
@@ -122,7 +122,7 @@ class ReadinessTest {
         when(health.getStatus()).thenReturn("unhealthy");
 
         assertThatThrownBy(() -> Readiness.healthcheck(c, "cid", Duration.ofMillis(50), Duration.ofMillis(10)))
-                .isInstanceOf(Readiness.NotReadyException.class)
+                .isInstanceOf(NotReadyException.class)
                 .hasMessageContaining("not healthy within");
     }
 
@@ -139,7 +139,7 @@ class ReadinessTest {
     @Test
     void tcpPortTimesOutWhenNothingListening() {
         assertThatThrownBy(() -> Readiness.tcpPort("127.0.0.1", 1, Duration.ofMillis(50), Duration.ofMillis(10)))
-                .isInstanceOf(Readiness.NotReadyException.class)
+                .isInstanceOf(NotReadyException.class)
                 .hasMessageContaining("TCP");
     }
 
@@ -158,7 +158,7 @@ class ReadinessTest {
         worker.join(5_000);
         assertThat(worker.isAlive()).isFalse();
         assertThat(thrown[0])
-                .isInstanceOf(Readiness.NotReadyException.class)
+                .isInstanceOf(NotReadyException.class)
                 .hasMessageContaining("Interrupted while waiting on TCP");
     }
 
@@ -206,7 +206,7 @@ class ReadinessTest {
         });
 
         assertThatThrownBy(() -> Readiness.logLine(c, "cid", ".*ready.*", Duration.ofMillis(50)))
-                .isInstanceOf(Readiness.NotReadyException.class)
+                .isInstanceOf(NotReadyException.class)
                 .hasMessageContaining("not found within");
     }
 
@@ -232,7 +232,7 @@ class ReadinessTest {
         worker.join(5_000);
         assertThat(worker.isAlive()).isFalse();
         assertThat(thrown[0])
-                .isInstanceOf(Readiness.NotReadyException.class)
+                .isInstanceOf(NotReadyException.class)
                 .hasMessageContaining("Interrupted while waiting");
     }
 

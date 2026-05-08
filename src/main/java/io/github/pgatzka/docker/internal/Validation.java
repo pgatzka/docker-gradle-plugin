@@ -1,8 +1,10 @@
 package io.github.pgatzka.docker.internal;
 
-import io.github.pgatzka.docker.dsl.ContainerSpec;
+import io.github.pgatzka.docker.dsl.mount.BindMount;
+import io.github.pgatzka.docker.dsl.mount.VolumeMount;
+import io.github.pgatzka.docker.dsl.spec.ContainerSpec;
 import io.github.pgatzka.docker.dsl.DockerExtension;
-import io.github.pgatzka.docker.dsl.Mounts;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -43,14 +45,14 @@ public final class Validation {
 
     private static void requireUniqueMountTargets(ContainerSpec container) {
         Set<String> seenPaths = new HashSet<>();
-        for (Mounts.VolumeMount volumeMount : container.getMounts().volumes()) {
+        for (VolumeMount volumeMount : container.getMounts().volumes()) {
             if (!seenPaths.add(volumeMount.containerPath())) {
                 throw new GradleException("Container " + container.getName()
                         + " has duplicate mount target " + volumeMount.containerPath()
                         + "; each container path may only be mounted once.");
             }
         }
-        for (Mounts.BindMount bindMount : container.getMounts().binds()) {
+        for (BindMount bindMount : container.getMounts().binds()) {
             if (!seenPaths.add(bindMount.containerPath())) {
                 throw new GradleException("Container " + container.getName()
                         + " has duplicate mount target " + bindMount.containerPath()
@@ -60,7 +62,7 @@ public final class Validation {
     }
 
     private static void requireDeclaredVolumes(ContainerSpec container, Set<String> declared) {
-        for (Mounts.VolumeMount volumeMount : container.getMounts().volumes()) {
+        for (VolumeMount volumeMount : container.getMounts().volumes()) {
             if (!declared.contains(volumeMount.volumeName())) {
                 throw new GradleException("Container " + container.getName() + " references undeclared volume "
                         + volumeMount.volumeName() + ". Declare it in volumes { register(\""

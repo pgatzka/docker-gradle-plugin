@@ -3,6 +3,8 @@ package io.github.pgatzka.docker.dsl;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.github.pgatzka.docker.dsl.mount.BindMount;
+import io.github.pgatzka.docker.dsl.mount.VolumeMount;
 import org.junit.jupiter.api.Test;
 
 class MountsTest {
@@ -17,12 +19,12 @@ class MountsTest {
 
         assertThat(m.volumes())
                 .containsExactly(
-                        new Mounts.VolumeMount("codegen_data", "/var/lib/postgresql", false),
-                        new Mounts.VolumeMount("scratch", "/tmp/scratch", true));
+                        new VolumeMount("codegen_data", "/var/lib/postgresql", false),
+                        new VolumeMount("scratch", "/tmp/scratch", true));
         assertThat(m.binds())
                 .containsExactly(
-                        new Mounts.BindMount("./sql", "/init", false),
-                        new Mounts.BindMount("./conf", "/etc/conf", true));
+                        new BindMount("./sql", "/init", false),
+                        new BindMount("./conf", "/etc/conf", true));
     }
 
     @Test
@@ -50,8 +52,8 @@ class MountsTest {
 
         m.volume("second", "/second");
 
-        assertThat(snapshot).hasSize(1).containsExactly(new Mounts.VolumeMount("first", "/first", false));
-        assertThatThrownBy(() -> snapshot.add(new Mounts.VolumeMount("x", "/x", false)))
+        assertThat(snapshot).hasSize(1).containsExactly(new VolumeMount("first", "/first", false));
+        assertThatThrownBy(() -> snapshot.add(new VolumeMount("x", "/x", false)))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 
@@ -63,8 +65,8 @@ class MountsTest {
 
         m.bind("./second", "/second");
 
-        assertThat(snapshot).hasSize(1).containsExactly(new Mounts.BindMount("./first", "/first", false));
-        assertThatThrownBy(() -> snapshot.add(new Mounts.BindMount("x", "/x", false)))
+        assertThat(snapshot).hasSize(1).containsExactly(new BindMount("./first", "/first", false));
+        assertThatThrownBy(() -> snapshot.add(new BindMount("x", "/x", false)))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 
@@ -72,13 +74,13 @@ class MountsTest {
     void bindTwoArgDefaultsToReadWrite() {
         Mounts m = new Mounts();
         m.bind("./conf", "/etc/conf");
-        assertThat(m.binds()).containsExactly(new Mounts.BindMount("./conf", "/etc/conf", false));
+        assertThat(m.binds()).containsExactly(new BindMount("./conf", "/etc/conf", false));
     }
 
     @Test
     void volumeTwoArgDefaultsToReadWrite() {
         Mounts m = new Mounts();
         m.volume("data", "/var/lib");
-        assertThat(m.volumes()).containsExactly(new Mounts.VolumeMount("data", "/var/lib", false));
+        assertThat(m.volumes()).containsExactly(new VolumeMount("data", "/var/lib", false));
     }
 }

@@ -1,5 +1,8 @@
 package io.github.pgatzka.docker.dsl;
 
+import io.github.pgatzka.docker.dsl.mount.BindMount;
+import io.github.pgatzka.docker.dsl.mount.VolumeMount;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,7 +42,4 @@ public class Mounts {
         return volumes.stream().map(VolumeMount::volumeName).toList();
     }
 
-    public record VolumeMount(String volumeName, String containerPath, boolean readOnly) {}
-
-    public record BindMount(String hostPath, String containerPath, boolean readOnly) {}
 }

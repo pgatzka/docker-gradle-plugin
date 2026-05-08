@@ -16,7 +16,7 @@ import com.github.dockerjava.api.command.ListVolumesResponse;
 import com.github.dockerjava.api.command.StartContainerCmd;
 import com.github.dockerjava.api.exception.NotFoundException;
 import io.github.pgatzka.docker.dsl.DockerExtension;
-import io.github.pgatzka.docker.dsl.WaitFor;
+import io.github.pgatzka.docker.dsl.waitable.Waitable;
 import io.github.pgatzka.docker.service.DockerService;
 import java.util.List;
 import org.gradle.api.Project;
@@ -189,7 +189,7 @@ class TaskExecuteTest {
         DockerExtension ext = (DockerExtension) project.getExtensions().getByName("docker");
         ext.getContainers().register("svc", c -> {
             c.getImage().set("hello-world:latest");
-            c.getWaitFor().set(WaitFor.none());
+            c.getWait().set(Waitable.none());
         });
 
         DockerClient client = mock(DockerClient.class);

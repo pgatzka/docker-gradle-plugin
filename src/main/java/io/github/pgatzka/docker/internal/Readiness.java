@@ -150,10 +150,4 @@ public final class Readiness {
         }
     }
 
-    public static final class NotReadyException extends RuntimeException {
-
-        public NotReadyException(String msg) {
-            super(msg);
-        }
-    }
 }

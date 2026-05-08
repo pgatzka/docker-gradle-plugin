@@ -1,10 +1,10 @@
 package io.github.pgatzka.docker;
 
-import io.github.pgatzka.docker.dsl.ContainerSpec;
+import io.github.pgatzka.docker.dsl.mount.VolumeMount;
+import io.github.pgatzka.docker.dsl.spec.ContainerSpec;
 import io.github.pgatzka.docker.dsl.DockerExtension;
-import io.github.pgatzka.docker.dsl.Mounts;
-import io.github.pgatzka.docker.dsl.NetworkSpec;
-import io.github.pgatzka.docker.dsl.VolumeSpec;
+import io.github.pgatzka.docker.dsl.spec.NetworkSpec;
+import io.github.pgatzka.docker.dsl.spec.VolumeSpec;
 import io.github.pgatzka.docker.internal.Names;
 import io.github.pgatzka.docker.internal.Validation;
 import io.github.pgatzka.docker.service.DockerService;
@@ -18,8 +18,7 @@ import io.github.pgatzka.docker.task.volume.RemoveVolumeTask;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
-import javax.inject.Inject;
-import org.gradle.api.NamedDomainObjectContainer;
+
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Provider;
@@ -86,7 +85,7 @@ public class DockerPlugin implements Plugin<Project> {
                 task.getVolumeMounts()
                         .set(project.provider(() -> spec.getMounts().volumes()));
                 task.getBindMounts().set(project.provider(() -> spec.getMounts().binds()));
-                task.getWaitFor().set(spec.getWaitFor());
+                task.getWaitFor().set(spec.getWait());
                 task.getWaitTimeout().set(spec.getWaitTimeout());
                 task.getPullPolicy().set(spec.getPullPolicy());
 
@@ -96,7 +95,7 @@ public class DockerPlugin implements Plugin<Project> {
                 // backwards into the lambda the way javac does).
                 Callable<List<String>> autoDepsCallable = () -> {
                     List<String> deps = new ArrayList<>();
-                    for (Mounts.VolumeMount volumeMount : spec.getMounts().volumes()) {
+                    for (VolumeMount volumeMount : spec.getMounts().volumes()) {
                         deps.add(Names.createVolumeTask(volumeMount.volumeName()));
                     }
                     for (String networkName : spec.getNetworks().getOrElse(List.of())) {
@@ -122,37 +121,4 @@ public class DockerPlugin implements Plugin<Project> {
         project.afterEvaluate(p -> Validation.validate(ext));
     }
 
-    public abstract static class DockerExtensionImpl implements DockerExtension {
-
-        private final NamedDomainObjectContainer<ContainerSpec> containers;
-
-        private final NamedDomainObjectContainer<VolumeSpec> volumes;
-
-        private final NamedDomainObjectContainer<NetworkSpec> networks;
-
-        @Inject
-        public DockerExtensionImpl(
-                NamedDomainObjectContainer<ContainerSpec> containers,
-                NamedDomainObjectContainer<VolumeSpec> volumes,
-                NamedDomainObjectContainer<NetworkSpec> networks) {
-            this.containers = containers;
-            this.volumes = volumes;
-            this.networks = networks;
-        }
-
-        @Override
-        public NamedDomainObjectContainer<ContainerSpec> getContainers() {
-            return containers;
-        }
-
-        @Override
-        public NamedDomainObjectContainer<VolumeSpec> getVolumes() {
-            return volumes;
-        }
-
-        @Override
-        public NamedDomainObjectContainer<NetworkSpec> getNetworks() {
-            return networks;
-        }
-    }
 }

@@ -5,6 +5,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+
+import io.github.pgatzka.docker.dsl.spec.ContainerSpec;
+import io.github.pgatzka.docker.dsl.waitable.None;
+import io.github.pgatzka.docker.dsl.waitable.Waitable;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +25,7 @@ class ContainerSpecTest {
         assertThat(spec.getPorts().get()).isEmpty();
         assertThat(spec.getNetworks().get()).isEmpty();
         assertThat(spec.getCommand().get()).isEmpty();
-        assertThat(spec.getWaitFor().get()).isInstanceOf(WaitFor.None.class);
+        assertThat(spec.getWait().get()).isInstanceOf(None.class);
         assertThat(spec.getWaitTimeout().get()).isEqualTo(Duration.ofSeconds(60));
         assertThat(spec.getStopTimeout().get()).isEqualTo(Duration.ofSeconds(10));
         assertThat(spec.getPullPolicy().get()).isEqualTo(PullPolicy.IF_NOT_PRESENT);
@@ -51,12 +55,12 @@ class ContainerSpecTest {
         spec.getEnvironment().set(Map.of("K", "V"));
         spec.getPorts().set(Map.of(5432, 5432));
         spec.getNetworks().set(List.of("backend"));
-        spec.getWaitFor().set(WaitFor.tcpPort(5432));
+        spec.getWait().set(Waitable.tcpPort(5432));
 
         assertThat(spec.getImage().get()).isEqualTo("postgres:18-alpine");
         assertThat(spec.getEnvironment().get()).containsEntry("K", "V");
         assertThat(spec.getPorts().get()).containsEntry(5432, 5432);
         assertThat(spec.getNetworks().get()).containsExactly("backend");
-        assertThat(spec.getWaitFor().get()).isEqualTo(WaitFor.tcpPort(5432));
+        assertThat(spec.getWait().get()).isEqualTo(Waitable.tcpPort(5432));
     }
 }

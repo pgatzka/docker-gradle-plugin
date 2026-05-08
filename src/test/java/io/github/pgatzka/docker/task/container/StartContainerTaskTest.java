@@ -17,13 +17,15 @@ import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.HealthCheck;
 import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.Image;
-import io.github.pgatzka.docker.dsl.Mounts;
 import io.github.pgatzka.docker.dsl.PullPolicy;
-import io.github.pgatzka.docker.dsl.WaitFor;
+import io.github.pgatzka.docker.dsl.waitable.Waitable;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import io.github.pgatzka.docker.dsl.mount.BindMount;
+import io.github.pgatzka.docker.dsl.mount.VolumeMount;
 import org.gradle.api.GradleException;
 import org.gradle.api.logging.Logger;
 import org.junit.jupiter.api.Test;
@@ -116,9 +118,9 @@ class StartContainerTaskTest {
         return start;
     }
 
-    private static StartContainerTask.Params params(
-            String image, WaitFor waitFor, PullPolicy pullPolicy, Map<Integer, Integer> ports) {
-        return new StartContainerTask.Params(
+    private static StartContainerTaskParams params(
+            String image, Waitable waitable, PullPolicy pullPolicy, Map<Integer, Integer> ports) {
+        return new StartContainerTaskParams(
                 "c",
                 image,
                 Map.of(),
@@ -127,21 +129,21 @@ class StartContainerTaskTest {
                 List.of(),
                 List.of(),
                 List.of(),
-                waitFor,
+                waitable,
                 SHORT_TIMEOUT,
                 pullPolicy);
     }
 
-    private static StartContainerTask.Params paramsFull(
+    private static StartContainerTaskParams paramsFull(
             Map<String, String> env,
             Map<Integer, Integer> ports,
             List<String> networks,
             List<String> command,
-            List<Mounts.VolumeMount> volumeMounts,
-            List<Mounts.BindMount> bindMounts,
-            WaitFor waitFor,
+            List<VolumeMount> volumeMounts,
+            List<BindMount> bindMounts,
+            Waitable waitable,
             PullPolicy pullPolicy) {
-        return new StartContainerTask.Params(
+        return new StartContainerTaskParams(
                 "c",
                 "img:1",
                 env,
@@ -150,7 +152,7 @@ class StartContainerTaskTest {
                 command,
                 volumeMounts,
                 bindMounts,
-                waitFor,
+                waitable,
                 SHORT_TIMEOUT,
                 pullPolicy);
     }
@@ -178,8 +180,8 @@ class StartContainerTaskTest {
         when(insImgResp.getConfig()).thenReturn(cfg);
         when(cfg.getHealthcheck()).thenReturn(null);
 
-        StartContainerTask.Params p =
-                params("postgres:18-alpine", WaitFor.healthcheck(), PullPolicy.IF_NOT_PRESENT, Map.of());
+        StartContainerTaskParams p =
+                params("postgres:18-alpine", Waitable.healthcheck(), PullPolicy.IF_NOT_PRESENT, Map.of());
 
         assertThatThrownBy(() -> StartContainerTask.run(c, p, mock(Logger.class)))
                 .isInstanceOf(GradleException.class)
@@ -197,7 +199,7 @@ class StartContainerTaskTest {
         CreateContainerCmd create = stubCreate(c, "hello-world:latest", "cid");
         StartContainerCmd start = stubStart(c, "c");
 
-        StartContainerTask.Params p = params("hello-world:latest", WaitFor.none(), PullPolicy.IF_NOT_PRESENT, Map.of());
+        StartContainerTaskParams p = params("hello-world:latest", Waitable.none(), PullPolicy.IF_NOT_PRESENT, Map.of());
 
         StartContainerTask.run(c, p, mock(Logger.class));
 
@@ -226,7 +228,7 @@ class StartContainerTaskTest {
         stubCreate(c, "img:1", "cid");
         stubStart(c, "c");
 
-        StartContainerTask.Params p = params("img:1", WaitFor.none(), PullPolicy.ALWAYS, Map.of());
+        StartContainerTaskParams p = params("img:1", Waitable.none(), PullPolicy.ALWAYS, Map.of());
 
         StartContainerTask.run(c, p, mock(Logger.class));
 
@@ -244,7 +246,7 @@ class StartContainerTaskTest {
         stubCreate(c, "img:1", "cid");
         stubStart(c, "c");
 
-        StartContainerTask.Params p = params("img:1", WaitFor.none(), PullPolicy.NEVER, Map.of());
+        StartContainerTaskParams p = params("img:1", Waitable.none(), PullPolicy.NEVER, Map.of());
 
         StartContainerTask.run(c, p, mock(Logger.class));
 
@@ -261,7 +263,7 @@ class StartContainerTaskTest {
         stubCreate(c, "img:1", "cid");
         stubStart(c, "c");
 
-        StartContainerTask.Params p = params("img:1", WaitFor.none(), PullPolicy.IF_NOT_PRESENT, Map.of());
+        StartContainerTaskParams p = params("img:1", Waitable.none(), PullPolicy.IF_NOT_PRESENT, Map.of());
 
         StartContainerTask.run(c, p, mock(Logger.class));
 
@@ -279,7 +281,7 @@ class StartContainerTaskTest {
         when(pullCmd.exec(any(PullImageResultCallback.class))).thenReturn(cb);
         when(cb.awaitCompletion(anyLong(), any(TimeUnit.class))).thenReturn(false);
 
-        StartContainerTask.Params p = params("img:1", WaitFor.none(), PullPolicy.IF_NOT_PRESENT, Map.of());
+        StartContainerTaskParams p = params("img:1", Waitable.none(), PullPolicy.IF_NOT_PRESENT, Map.of());
 
         assertThatThrownBy(() -> StartContainerTask.run(c, p, mock(Logger.class)))
                 .isInstanceOf(GradleException.class)
@@ -297,7 +299,7 @@ class StartContainerTaskTest {
         when(pullCmd.exec(any(PullImageResultCallback.class))).thenReturn(cb);
         when(cb.awaitCompletion(anyLong(), any(TimeUnit.class))).thenThrow(new InterruptedException("boom"));
 
-        StartContainerTask.Params p = params("img:1", WaitFor.none(), PullPolicy.IF_NOT_PRESENT, Map.of());
+        StartContainerTaskParams p = params("img:1", Waitable.none(), PullPolicy.IF_NOT_PRESENT, Map.of());
 
         try {
             assertThatThrownBy(() -> StartContainerTask.run(c, p, mock(Logger.class)))
@@ -323,7 +325,7 @@ class StartContainerTaskTest {
         stubCreate(c, "img:1", "cid");
         stubStart(c, "c");
 
-        StartContainerTask.Params p = params("img:1", WaitFor.none(), PullPolicy.IF_NOT_PRESENT, Map.of());
+        StartContainerTaskParams p = params("img:1", Waitable.none(), PullPolicy.IF_NOT_PRESENT, Map.of());
 
         StartContainerTask.run(c, p, mock(Logger.class));
 
@@ -340,7 +342,7 @@ class StartContainerTaskTest {
         when(c.inspectImageCmd("img:1")).thenReturn(insImg);
         when(insImg.exec()).thenThrow(new NotFoundException("missing"));
 
-        StartContainerTask.Params p = params("img:1", WaitFor.healthcheck(), PullPolicy.NEVER, Map.of());
+        StartContainerTaskParams p = params("img:1", Waitable.healthcheck(), PullPolicy.NEVER, Map.of());
 
         assertThatThrownBy(() -> StartContainerTask.run(c, p, mock(Logger.class)))
                 .isInstanceOf(GradleException.class)
@@ -363,7 +365,7 @@ class StartContainerTaskTest {
         when(cfg.getHealthcheck()).thenReturn(hc);
         when(hc.getTest()).thenReturn(List.of("NONE"));
 
-        StartContainerTask.Params p = params("img:1", WaitFor.healthcheck(), PullPolicy.IF_NOT_PRESENT, Map.of());
+        StartContainerTaskParams p = params("img:1", Waitable.healthcheck(), PullPolicy.IF_NOT_PRESENT, Map.of());
 
         assertThatThrownBy(() -> StartContainerTask.run(c, p, mock(Logger.class)))
                 .isInstanceOf(GradleException.class)
@@ -393,7 +395,7 @@ class StartContainerTaskTest {
         stubCreate(c, "img:1", "cid");
         stubStart(c, "c");
 
-        StartContainerTask.Params p = params("img:1", WaitFor.healthcheck(), PullPolicy.IF_NOT_PRESENT, Map.of());
+        StartContainerTaskParams p = params("img:1", Waitable.healthcheck(), PullPolicy.IF_NOT_PRESENT, Map.of());
 
         // Healthcheck readiness polling will throw NotReadyException; that proves we got past
         // validateImageHealthcheckIfRequired into the readiness path.
@@ -413,7 +415,7 @@ class StartContainerTaskTest {
         when(insImg.exec()).thenReturn(insImgResp);
         when(insImgResp.getConfig()).thenReturn(null);
 
-        StartContainerTask.Params p = params("img:1", WaitFor.healthcheck(), PullPolicy.IF_NOT_PRESENT, Map.of());
+        StartContainerTaskParams p = params("img:1", Waitable.healthcheck(), PullPolicy.IF_NOT_PRESENT, Map.of());
 
         assertThatThrownBy(() -> StartContainerTask.run(c, p, mock(Logger.class)))
                 .isInstanceOf(GradleException.class)
@@ -434,7 +436,7 @@ class StartContainerTaskTest {
 
         StartContainerCmd start = stubStart(c, "c");
 
-        StartContainerTask.Params p = params("img:1", WaitFor.none(), PullPolicy.IF_NOT_PRESENT, Map.of());
+        StartContainerTaskParams p = params("img:1", Waitable.none(), PullPolicy.IF_NOT_PRESENT, Map.of());
 
         StartContainerTask.run(c, p, mock(Logger.class));
 
@@ -464,7 +466,7 @@ class StartContainerTaskTest {
         stubInspectImageStub(c, "img:1");
         stubExistingContainer(c, "c", mockContainer(stateName, false));
 
-        StartContainerTask.Params p = params("img:1", WaitFor.none(), PullPolicy.IF_NOT_PRESENT, Map.of());
+        StartContainerTaskParams p = params("img:1", Waitable.none(), PullPolicy.IF_NOT_PRESENT, Map.of());
 
         assertThatThrownBy(() -> StartContainerTask.run(c, p, mock(Logger.class)))
                 .isInstanceOf(GradleException.class)
@@ -482,7 +484,7 @@ class StartContainerTaskTest {
 
         StartContainerCmd start = stubStart(c, "c");
 
-        StartContainerTask.Params p = params("img:1", WaitFor.none(), PullPolicy.IF_NOT_PRESENT, Map.of());
+        StartContainerTaskParams p = params("img:1", Waitable.none(), PullPolicy.IF_NOT_PRESENT, Map.of());
 
         StartContainerTask.run(c, p, mock(Logger.class));
 
@@ -499,7 +501,7 @@ class StartContainerTaskTest {
 
         StartContainerCmd start = stubStart(c, "c");
 
-        StartContainerTask.Params p = params("img:1", WaitFor.none(), PullPolicy.IF_NOT_PRESENT, Map.of());
+        StartContainerTaskParams p = params("img:1", Waitable.none(), PullPolicy.IF_NOT_PRESENT, Map.of());
 
         StartContainerTask.run(c, p, mock(Logger.class));
 
@@ -517,7 +519,7 @@ class StartContainerTaskTest {
 
         StartContainerCmd start = stubStart(c, "c");
 
-        StartContainerTask.Params p = params("img:1", WaitFor.none(), PullPolicy.IF_NOT_PRESENT, Map.of());
+        StartContainerTaskParams p = params("img:1", Waitable.none(), PullPolicy.IF_NOT_PRESENT, Map.of());
 
         StartContainerTask.run(c, p, mock(Logger.class));
 
@@ -539,14 +541,14 @@ class StartContainerTaskTest {
         CreateContainerCmd create = stubCreate(c, "img:1", "cid");
         stubStart(c, "c");
 
-        StartContainerTask.Params p = paramsFull(
+        StartContainerTaskParams p = paramsFull(
                 Map.of(),
                 Map.of(),
                 List.of(),
                 List.of(),
                 List.of(),
                 List.of(),
-                WaitFor.none(),
+                Waitable.none(),
                 PullPolicy.IF_NOT_PRESENT);
 
         StartContainerTask.run(c, p, mock(Logger.class));
@@ -568,14 +570,14 @@ class StartContainerTaskTest {
         CreateContainerCmd create = stubCreate(c, "img:1", "cid");
         stubStart(c, "c");
 
-        StartContainerTask.Params p = paramsFull(
+        StartContainerTaskParams p = paramsFull(
                 Map.of("FOO", "bar"),
                 Map.of(),
                 List.of(),
                 List.of(),
                 List.of(),
                 List.of(),
-                WaitFor.none(),
+                Waitable.none(),
                 PullPolicy.IF_NOT_PRESENT);
 
         StartContainerTask.run(c, p, mock(Logger.class));
@@ -599,14 +601,14 @@ class StartContainerTaskTest {
 
         List<String> command = List.of("sh", "-c", "true");
 
-        StartContainerTask.Params p = paramsFull(
+        StartContainerTaskParams p = paramsFull(
                 Map.of(),
                 Map.of(),
                 List.of(),
                 command,
                 List.of(),
                 List.of(),
-                WaitFor.none(),
+                Waitable.none(),
                 PullPolicy.IF_NOT_PRESENT);
 
         StartContainerTask.run(c, p, mock(Logger.class));
@@ -627,14 +629,14 @@ class StartContainerTaskTest {
         when(create.getHostConfig()).thenReturn(null);
         stubStart(c, "c");
 
-        StartContainerTask.Params p = paramsFull(
+        StartContainerTaskParams p = paramsFull(
                 Map.of(),
                 Map.of(8080, 80),
                 List.of(),
                 List.of(),
                 List.of(),
                 List.of(),
-                WaitFor.none(),
+                Waitable.none(),
                 PullPolicy.IF_NOT_PRESENT);
 
         StartContainerTask.run(c, p, mock(Logger.class));
@@ -659,16 +661,16 @@ class StartContainerTaskTest {
         when(create.getHostConfig()).thenReturn(hc);
         stubStart(c, "c");
 
-        Mounts.VolumeMount vm = new Mounts.VolumeMount("data", "/var/lib/data", true);
+        VolumeMount vm = new VolumeMount("data", "/var/lib/data", true);
 
-        StartContainerTask.Params p = paramsFull(
+        StartContainerTaskParams p = paramsFull(
                 Map.of(),
                 Map.of(),
                 List.of(),
                 List.of(),
                 List.of(vm),
                 List.of(),
-                WaitFor.none(),
+                Waitable.none(),
                 PullPolicy.IF_NOT_PRESENT);
 
         StartContainerTask.run(c, p, mock(Logger.class));
@@ -693,16 +695,16 @@ class StartContainerTaskTest {
         when(create.getHostConfig()).thenReturn(hc);
         stubStart(c, "c");
 
-        Mounts.BindMount bm = new Mounts.BindMount("/host/path", "/container/path", false);
+        BindMount bm = new BindMount("/host/path", "/container/path", false);
 
-        StartContainerTask.Params p = paramsFull(
+        StartContainerTaskParams p = paramsFull(
                 Map.of(),
                 Map.of(),
                 List.of(),
                 List.of(),
                 List.of(),
                 List.of(bm),
-                WaitFor.none(),
+                Waitable.none(),
                 PullPolicy.IF_NOT_PRESENT);
 
         StartContainerTask.run(c, p, mock(Logger.class));
@@ -727,17 +729,17 @@ class StartContainerTaskTest {
         when(create.getHostConfig()).thenReturn(hc);
         stubStart(c, "c");
 
-        Mounts.VolumeMount vm = new Mounts.VolumeMount("data", "/data", false);
-        Mounts.BindMount bm = new Mounts.BindMount("/host", "/host-target", false);
+        VolumeMount vm = new VolumeMount("data", "/data", false);
+        BindMount bm = new BindMount("/host", "/host-target", false);
 
-        StartContainerTask.Params p = paramsFull(
+        StartContainerTaskParams p = paramsFull(
                 Map.of(),
                 Map.of(),
                 List.of(),
                 List.of(),
                 List.of(vm),
                 List.of(bm),
-                WaitFor.none(),
+                Waitable.none(),
                 PullPolicy.IF_NOT_PRESENT);
 
         StartContainerTask.run(c, p, mock(Logger.class));
@@ -759,14 +761,14 @@ class StartContainerTaskTest {
         when(create.getHostConfig()).thenReturn(hc);
         stubStart(c, "c");
 
-        StartContainerTask.Params p = paramsFull(
+        StartContainerTaskParams p = paramsFull(
                 Map.of(),
                 Map.of(),
                 List.of("net1"),
                 List.of(),
                 List.of(),
                 List.of(),
-                WaitFor.none(),
+                Waitable.none(),
                 PullPolicy.IF_NOT_PRESENT);
 
         StartContainerTask.run(c, p, mock(Logger.class));
@@ -791,14 +793,14 @@ class StartContainerTaskTest {
         ConnectToNetworkCmd connect = mock(ConnectToNetworkCmd.class, RETURNS_SELF);
         when(c.connectToNetworkCmd()).thenReturn(connect);
 
-        StartContainerTask.Params p = paramsFull(
+        StartContainerTaskParams p = paramsFull(
                 Map.of(),
                 Map.of(),
                 List.of("net1", "net2", "net3"),
                 List.of(),
                 List.of(),
                 List.of(),
-                WaitFor.none(),
+                Waitable.none(),
                 PullPolicy.IF_NOT_PRESENT);
 
         StartContainerTask.run(c, p, mock(Logger.class));
@@ -824,7 +826,7 @@ class StartContainerTaskTest {
         stubCreate(c, "img:1", "cid");
         stubStart(c, "c");
 
-        StartContainerTask.Params p = params("img:1", WaitFor.none(), PullPolicy.IF_NOT_PRESENT, Map.of());
+        StartContainerTaskParams p = params("img:1", Waitable.none(), PullPolicy.IF_NOT_PRESENT, Map.of());
 
         StartContainerTask.run(c, p, mock(Logger.class));
 
@@ -847,7 +849,7 @@ class StartContainerTaskTest {
         // to confirm the LogLine branch was entered.
         when(c.logContainerCmd("c")).thenReturn(null);
 
-        StartContainerTask.Params p = params("img:1", WaitFor.logLine("ready"), PullPolicy.IF_NOT_PRESENT, Map.of());
+        StartContainerTaskParams p = params("img:1", Waitable.logLine("ready"), PullPolicy.IF_NOT_PRESENT, Map.of());
 
         assertThatThrownBy(() -> StartContainerTask.run(c, p, mock(Logger.class)))
                 .isInstanceOf(Throwable.class);
@@ -867,8 +869,8 @@ class StartContainerTaskTest {
         // Use a high arbitrary host port that is almost certainly closed; Readiness.tcpPort
         // will time out and throw NotReadyException, proving the TcpPort arm executed and
         // that daemonHost/findHostPortMappedTo resolved correctly.
-        StartContainerTask.Params p =
-                params("img:1", WaitFor.tcpPort(80), PullPolicy.IF_NOT_PRESENT, Map.of(54329, 80));
+        StartContainerTaskParams p =
+                params("img:1", Waitable.tcpPort(80), PullPolicy.IF_NOT_PRESENT, Map.of(54329, 80));
 
         assertThatThrownBy(() -> StartContainerTask.run(c, p, mock(Logger.class)))
                 .hasMessageContaining("not reachable");
@@ -885,7 +887,7 @@ class StartContainerTaskTest {
         stubStart(c, "c");
 
         // Map host 8080 -> container 81; we'll wait for 80, which is unmapped.
-        StartContainerTask.Params p = params("img:1", WaitFor.tcpPort(80), PullPolicy.IF_NOT_PRESENT, Map.of(8080, 81));
+        StartContainerTaskParams p = params("img:1", Waitable.tcpPort(80), PullPolicy.IF_NOT_PRESENT, Map.of(8080, 81));
 
         assertThatThrownBy(() -> StartContainerTask.run(c, p, mock(Logger.class)))
                 .isInstanceOf(GradleException.class)

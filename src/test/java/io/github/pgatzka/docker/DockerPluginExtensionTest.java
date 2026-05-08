@@ -3,8 +3,8 @@ package io.github.pgatzka.docker;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.pgatzka.docker.dsl.DockerExtension;
-import io.github.pgatzka.docker.dsl.NetworkSpec;
-import io.github.pgatzka.docker.dsl.VolumeSpec;
+import io.github.pgatzka.docker.dsl.spec.NetworkSpec;
+import io.github.pgatzka.docker.dsl.spec.VolumeSpec;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.jupiter.api.Test;
 

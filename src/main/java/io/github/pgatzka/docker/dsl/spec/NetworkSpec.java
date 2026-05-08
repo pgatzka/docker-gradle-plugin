@@ -1,4 +1,4 @@
-package io.github.pgatzka.docker.dsl;
+package io.github.pgatzka.docker.dsl.spec;
 
 import javax.inject.Inject;
 

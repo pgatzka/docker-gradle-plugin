@@ -12,7 +12,7 @@ docker {
             mounts {
                 volume("pg_data", "/var/lib/postgresql/data")
             }
-            waitFor.set(io.github.pgatzka.docker.dsl.WaitFor.tcpPort(5432))
+            wait.set(io.github.pgatzka.docker.dsl.waitable.Waitable.tcpPort(5432))
             waitTimeout.set(java.time.Duration.ofSeconds(60))
         }
     }
