@@ -136,8 +136,6 @@ jobs:
   run-analysis:
     name: Run Analysis
     runs-on: ubuntu-latest
-    env:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     needs:
       - run-tests
     steps:
@@ -163,9 +161,12 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
       - name: Run Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: ./gradlew clean test jacocoTestReport sonar
 
   publish-to-github-packages:
+    name: Publish to GitHub packages
     runs-on: ubuntu-latest
     needs:
       run-tests
@@ -196,7 +197,7 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
       - name: Publish to GitHub Packages
-        run: ./gradlew clean publishAllPublicationsToGitHubPackagesRepository
         env:
-          USERNAME: ${{ github.actor }}
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew clean publishAllPublicationsToGitHubPackagesRepository

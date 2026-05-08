@@ -21,8 +21,8 @@ java {
 }
 
 dependencies {
-    implementation("com.github.docker-java:docker-java:3.7.1")
-    implementation("com.github.docker-java:docker-java-transport-httpclient5:3.7.1")
+    implementation(libs.docker.java)
+    implementation(libs.docker.java.transport)
 }
 
 spotless {
