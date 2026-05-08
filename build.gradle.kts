@@ -154,5 +154,5 @@ release {
     git {
         requireBranch = "main"
     }
-    buildTasks = listOf("build", "publish", "publishPlugins")
+    buildTasks = listOf("build", "publish", "publishPlugins", "sonar")
 }

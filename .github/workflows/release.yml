@@ -31,6 +31,24 @@ jobs:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
+      - name: Run Tests
+        run: ./gradlew clean check
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-reports
+          path: build/reports/jacoco/
+          retention-days: 14
+      - name: Verify Coverage
+        run: ./gradlew jacocoTestReport jacocoTestCoverageVerification
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-reports
+          path: build/reports/jacoco/
+          retention-days: 14
       - name: Configure git
         run: |
           git config user.name  "github-actions[bot]"
