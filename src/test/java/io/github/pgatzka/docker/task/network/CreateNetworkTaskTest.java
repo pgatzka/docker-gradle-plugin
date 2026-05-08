@@ -8,7 +8,6 @@ import com.github.dockerjava.api.command.ListNetworksCmd;
 import com.github.dockerjava.api.model.Network;
 import java.util.List;
 import java.util.Map;
-
 import org.gradle.api.logging.Logger;
 import org.junit.jupiter.api.Test;
 

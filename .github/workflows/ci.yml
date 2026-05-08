@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  build:
+    name: Build, test, analyze
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Sonar needs the full history for accurate blame data.
+          fetch-depth: 0
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Spotless format check
+        run: ./gradlew spotlessCheck
+
+      - name: Build, test (unit + functional), JaCoCo
+        # `build` triggers `check`, which triggers `test` and `functionalTest`
+        # (Docker is available on ubuntu-latest runners).
+        run: ./gradlew build jacocoTestReport
+
+      - name: Publish plugin to mavenLocal
+        run: ./gradlew publishToMavenLocal
+
+      - name: Run hello-world example end-to-end
+        run: ./gradlew -p examples/hello-world codegen
+
+      - name: SonarCloud analysis
+        if: ${{ env.SONAR_TOKEN != '' }}
+        run: ./gradlew sonar
+
+      - name: Upload test & coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            build/reports/tests/
+            build/reports/jacoco/
+          retention-days: 14

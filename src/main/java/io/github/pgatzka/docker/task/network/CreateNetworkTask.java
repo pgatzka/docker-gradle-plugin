@@ -2,9 +2,8 @@ package io.github.pgatzka.docker.task.network;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateNetworkCmd;
-import java.util.Map;
-
 import io.github.pgatzka.docker.task.DockerTask;
+import java.util.Map;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;

@@ -11,14 +11,13 @@ import io.github.pgatzka.docker.dsl.Mounts;
 import io.github.pgatzka.docker.dsl.PullPolicy;
 import io.github.pgatzka.docker.dsl.WaitFor;
 import io.github.pgatzka.docker.internal.Readiness;
+import io.github.pgatzka.docker.task.DockerTask;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
-
-import io.github.pgatzka.docker.task.DockerTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.ListProperty;

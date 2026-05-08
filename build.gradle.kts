@@ -2,7 +2,9 @@ plugins {
     id("java-gradle-plugin")
     id("com.gradle.plugin-publish") version "2.1.1"
     id("com.diffplug.spotless") version "8.4.0"
+    id("org.sonarqube") version "5.1.0.4882"
     id("jvm-test-suite")
+    jacoco
 }
 
 group = "io.github.pgatzka"
@@ -79,4 +81,32 @@ spotless {
     java {
         palantirJavaFormat()
     }
+}
+
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+tasks.named<JacocoReport>("jacocoTestReport") {
+    dependsOn(tasks.named("test"))
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+}
+
+sonar {
+    properties {
+        property("sonar.projectKey", "pgatzka_docker-gradle-plugin")
+        property("sonar.organization", "pgatzka")
+        property("sonar.host.url", "https://sonarcloud.io")
+        property(
+            "sonar.coverage.jacoco.xmlReportPaths",
+            layout.buildDirectory.file("reports/jacoco/test/jacocoTestReport.xml").get().asFile.path,
+        )
+    }
+}
+
+tasks.named("sonar") {
+    dependsOn(tasks.named("jacocoTestReport"))
 }

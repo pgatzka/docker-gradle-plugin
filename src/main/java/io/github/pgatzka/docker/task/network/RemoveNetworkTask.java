@@ -2,9 +2,8 @@ package io.github.pgatzka.docker.task.network;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.Network;
-import java.util.Optional;
-
 import io.github.pgatzka.docker.task.DockerTask;
+import java.util.Optional;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;

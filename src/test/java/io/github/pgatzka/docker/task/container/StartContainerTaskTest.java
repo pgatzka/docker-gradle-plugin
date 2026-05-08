@@ -12,7 +12,6 @@ import io.github.pgatzka.docker.dsl.WaitFor;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-
 import org.gradle.api.GradleException;
 import org.gradle.api.logging.Logger;
 import org.junit.jupiter.api.Test;

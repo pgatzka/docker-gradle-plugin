@@ -9,7 +9,6 @@ import com.github.dockerjava.api.command.StopContainerCmd;
 import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.exception.NotModifiedException;
 import java.time.Duration;
-
 import org.gradle.api.logging.Logger;
 import org.junit.jupiter.api.Test;
 
