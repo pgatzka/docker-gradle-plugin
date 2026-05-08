@@ -16,10 +16,12 @@ import io.github.pgatzka.docker.task.volume.CreateVolumeTask;
 import io.github.pgatzka.docker.task.volume.RemoveVolumeTask;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.provider.Provider;
 
 public class DockerPlugin implements Plugin<Project> {
 
@@ -78,8 +80,9 @@ public class DockerPlugin implements Plugin<Project> {
                 t.getWaitTimeout().set(spec.getWaitTimeout());
                 t.getPullPolicy().set(spec.getPullPolicy());
 
-                // Lazy auto-dependsOn for referenced volumes and networks.
-                org.gradle.api.provider.Provider<List<String>> autoDeps = project.provider(() -> {
+                // Lazy auto-dependsOn for referenced volumes and networks. Cast pins the
+                // type parameter so Sonar's ECJ parser can resolve the overload.
+                Callable<List<String>> autoDepsCallable = () -> {
                     List<String> deps = new ArrayList<>();
                     for (var vm : spec.getMounts().volumes()) {
                         deps.add(Names.createVolumeTask(vm.volumeName()));
@@ -88,7 +91,8 @@ public class DockerPlugin implements Plugin<Project> {
                         deps.add(Names.createNetworkTask(n));
                     }
                     return deps;
-                });
+                };
+                Provider<List<String>> autoDeps = project.provider(autoDepsCallable);
                 t.dependsOn(autoDeps);
             });
 
