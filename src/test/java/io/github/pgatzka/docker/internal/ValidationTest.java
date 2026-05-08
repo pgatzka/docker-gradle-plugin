@@ -8,6 +8,8 @@ import org.gradle.api.Project;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 class ValidationTest {
 
     @Test
@@ -35,7 +37,7 @@ class ValidationTest {
 
         ext.getContainers().register("c", c -> {
             c.getImage().set("img:1");
-            c.getNetworks().set(java.util.List.of("ghost"));
+            c.getNetworks().set(List.of("ghost"));
         });
 
         assertThatThrownBy(() -> Validation.validate(ext))
@@ -54,7 +56,7 @@ class ValidationTest {
         ext.getNetworks().register("backend");
         ext.getContainers().register("c", c -> {
             c.getImage().set("img:1");
-            c.getNetworks().set(java.util.List.of("backend"));
+            c.getNetworks().set(List.of("backend"));
             c.mounts(m -> m.volume("data", "/data"));
         });
 

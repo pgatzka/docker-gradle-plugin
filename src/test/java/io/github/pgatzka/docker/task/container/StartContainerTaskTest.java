@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.*;
 import com.github.dockerjava.api.exception.NotFoundException;
+import com.github.dockerjava.api.model.ContainerConfig;
 import com.github.dockerjava.api.model.Image;
 import io.github.pgatzka.docker.dsl.PullPolicy;
 import io.github.pgatzka.docker.dsl.WaitFor;
@@ -41,8 +42,8 @@ class StartContainerTaskTest {
         // Image inspect: no healthcheck
         InspectImageCmd insImg = mock(InspectImageCmd.class);
         InspectImageResponse insImgResp = mock(InspectImageResponse.class);
-        com.github.dockerjava.api.model.ContainerConfig cfg =
-                mock(com.github.dockerjava.api.model.ContainerConfig.class);
+        ContainerConfig cfg =
+                mock(ContainerConfig.class);
         when(c.inspectImageCmd("postgres:18-alpine")).thenReturn(insImg);
         when(insImg.exec()).thenReturn(insImgResp);
         when(insImgResp.getConfig()).thenReturn(cfg);

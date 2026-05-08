@@ -14,8 +14,13 @@ import io.github.pgatzka.docker.task.network.CreateNetworkTask;
 import io.github.pgatzka.docker.task.network.RemoveNetworkTask;
 import io.github.pgatzka.docker.task.volume.CreateVolumeTask;
 import io.github.pgatzka.docker.task.volume.RemoveVolumeTask;
+import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+
+import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DockerPlugin implements Plugin<Project> {
 
@@ -42,9 +47,7 @@ public class DockerPlugin implements Plugin<Project> {
                 t.getDriverOpts().set(spec.getDriverOpts());
                 t.getLabels().set(spec.getLabels());
             });
-            project.getTasks().register(Names.removeVolumeTask(spec.getName()), RemoveVolumeTask.class, t -> {
-                t.getVolumeName().set(spec.getName());
-            });
+            project.getTasks().register(Names.removeVolumeTask(spec.getName()), RemoveVolumeTask.class, t -> t.getVolumeName().set(spec.getName()));
         });
 
         ext.getNetworks().all(spec -> {
@@ -55,9 +58,7 @@ public class DockerPlugin implements Plugin<Project> {
                 t.getInternal().set(spec.getInternal());
                 t.getAttachable().set(spec.getAttachable());
             });
-            project.getTasks().register(Names.removeNetworkTask(spec.getName()), RemoveNetworkTask.class, t -> {
-                t.getNetworkName().set(spec.getName());
-            });
+            project.getTasks().register(Names.removeNetworkTask(spec.getName()), RemoveNetworkTask.class, t -> t.getNetworkName().set(spec.getName()));
         });
 
         ext.getContainers().all(spec -> {
@@ -76,11 +77,11 @@ public class DockerPlugin implements Plugin<Project> {
 
                 // Lazy auto-dependsOn for referenced volumes and networks.
                 t.dependsOn(project.provider(() -> {
-                    java.util.List<String> deps = new java.util.ArrayList<>();
+                    List<String> deps = new ArrayList<>();
                     for (var vm : spec.getMounts().volumes()) {
                         deps.add(Names.createVolumeTask(vm.volumeName()));
                     }
-                    for (String n : spec.getNetworks().getOrElse(java.util.List.of())) {
+                    for (String n : spec.getNetworks().getOrElse(List.of())) {
                         deps.add(Names.createNetworkTask(n));
                     }
                     return deps;
@@ -91,9 +92,7 @@ public class DockerPlugin implements Plugin<Project> {
                 t.getContainerName().set(spec.getContainerName());
                 t.getStopTimeout().set(spec.getStopTimeout());
             });
-            project.getTasks().register(Names.removeContainerTask(spec.getName()), RemoveContainerTask.class, t -> {
-                t.getContainerName().set(spec.getContainerName());
-            });
+            project.getTasks().register(Names.removeContainerTask(spec.getName()), RemoveContainerTask.class, t -> t.getContainerName().set(spec.getContainerName()));
         });
 
         project.afterEvaluate(p -> Validation.validate(ext));
@@ -101,34 +100,34 @@ public class DockerPlugin implements Plugin<Project> {
 
     public abstract static class DockerExtensionImpl implements DockerExtension {
 
-        private final org.gradle.api.NamedDomainObjectContainer<ContainerSpec> containers;
+        private final NamedDomainObjectContainer<ContainerSpec> containers;
 
-        private final org.gradle.api.NamedDomainObjectContainer<VolumeSpec> volumes;
+        private final NamedDomainObjectContainer<VolumeSpec> volumes;
 
-        private final org.gradle.api.NamedDomainObjectContainer<NetworkSpec> networks;
+        private final NamedDomainObjectContainer<NetworkSpec> networks;
 
-        @javax.inject.Inject
+        @Inject
         public DockerExtensionImpl(
-                org.gradle.api.NamedDomainObjectContainer<ContainerSpec> containers,
-                org.gradle.api.NamedDomainObjectContainer<VolumeSpec> volumes,
-                org.gradle.api.NamedDomainObjectContainer<NetworkSpec> networks) {
+                NamedDomainObjectContainer<ContainerSpec> containers,
+                NamedDomainObjectContainer<VolumeSpec> volumes,
+                NamedDomainObjectContainer<NetworkSpec> networks) {
             this.containers = containers;
             this.volumes = volumes;
             this.networks = networks;
         }
 
         @Override
-        public org.gradle.api.NamedDomainObjectContainer<ContainerSpec> getContainers() {
+        public NamedDomainObjectContainer<ContainerSpec> getContainers() {
             return containers;
         }
 
         @Override
-        public org.gradle.api.NamedDomainObjectContainer<VolumeSpec> getVolumes() {
+        public NamedDomainObjectContainer<VolumeSpec> getVolumes() {
             return volumes;
         }
 
         @Override
-        public org.gradle.api.NamedDomainObjectContainer<NetworkSpec> getNetworks() {
+        public NamedDomainObjectContainer<NetworkSpec> getNetworks() {
             return networks;
         }
     }

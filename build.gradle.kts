@@ -126,7 +126,7 @@ gradlePlugin {
             implementationClass = "io.github.pgatzka.docker.DockerPlugin"
             displayName = "Docker Gradle Plugin"
             description = "Declare Docker containers, named volumes, and named networks in your Gradle build."
-            tags.set(listOf("docker", "containers", "integration-testing"))
+            tags.set(listOf("docker", "containers", "integration-testing", "codegen", "code-generation"))
         }
     }
     testSourceSets(sourceSets["functionalTest"])

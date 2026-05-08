@@ -7,6 +7,8 @@ import org.gradle.api.Task;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 class ContainerTaskGenerationTest {
 
     @Test
@@ -19,7 +21,7 @@ class ContainerTaskGenerationTest {
         ext.getNetworks().register("backend");
         ext.getContainers().register("postgres", c -> {
             c.getImage().set("postgres:18-alpine");
-            c.getNetworks().set(java.util.List.of("backend"));
+            c.getNetworks().set(List.of("backend"));
             c.mounts(m -> m.volume("data", "/var/lib/postgresql"));
         });
 
@@ -42,7 +44,7 @@ class ContainerTaskGenerationTest {
         var ext = (DockerExtension) project.getExtensions().getByName("docker");
         ext.getContainers().register("postgres", c -> {
             c.getImage().set("postgres:18-alpine");
-            c.getNetworks().set(java.util.List.of("backend"));
+            c.getNetworks().set(List.of("backend"));
             c.mounts(m -> m.volume("data", "/var/lib/postgresql"));
         });
         ext.getVolumes().register("data");

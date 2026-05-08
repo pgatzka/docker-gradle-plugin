@@ -71,10 +71,10 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
       - name: Run Tests
-        run: ./gradlew clean test
+        run: ./gradlew clean check
       - name: Upload test reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-reports
           path: build/reports/tests/
@@ -103,7 +103,7 @@ jobs:
         run: ./gradlew clean check jacocoTestReport
       - name: Upload coverage reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-reports
           path: build/reports/jacoco/
@@ -163,7 +163,7 @@ jobs:
       - name: Run Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew clean test jacocoTestReport sonar
+        run: ./gradlew clean check jacocoTestReport sonar
 
   publish-to-github-packages:
     name: Publish to GitHub packages
