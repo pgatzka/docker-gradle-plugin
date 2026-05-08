@@ -5,6 +5,7 @@ import io.github.pgatzka.docker.dsl.DockerExtension;
 import io.github.pgatzka.docker.dsl.NetworkSpec;
 import io.github.pgatzka.docker.dsl.VolumeSpec;
 import io.github.pgatzka.docker.internal.Names;
+import io.github.pgatzka.docker.internal.Validation;
 import io.github.pgatzka.docker.service.DockerService;
 import io.github.pgatzka.docker.task.CreateNetworkTask;
 import io.github.pgatzka.docker.task.CreateVolumeTask;
@@ -93,6 +94,8 @@ public class DockerPlugin implements Plugin<Project> {
                 t.getContainerName().set(spec.getContainerName());
             });
         });
+
+        project.afterEvaluate(p -> Validation.validate(ext));
     }
 
     public static abstract class DockerExtensionImpl implements DockerExtension {
