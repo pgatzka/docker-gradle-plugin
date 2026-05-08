@@ -49,7 +49,7 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
       - name: Verify Compilation
-        run: ./gradlew clean compile
+        run: ./gradlew clean compileJava
 
   run-tests:
     name: Run Tests
