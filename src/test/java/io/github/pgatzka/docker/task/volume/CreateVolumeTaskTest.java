@@ -51,4 +51,63 @@ class CreateVolumeTaskTest {
 
         verify(c, never()).createVolumeCmd();
     }
+
+    @Test
+    void createsWithoutDriverOptsOrLabelsWhenBothEmpty() {
+        DockerClient c = mock(DockerClient.class);
+        ListVolumesCmd list = mock(ListVolumesCmd.class);
+        ListVolumesResponse listResp = mock(ListVolumesResponse.class);
+        CreateVolumeCmd create = mock(CreateVolumeCmd.class, RETURNS_SELF);
+
+        when(c.listVolumesCmd()).thenReturn(list);
+        when(list.exec()).thenReturn(listResp);
+        when(listResp.getVolumes()).thenReturn(List.of());
+        when(c.createVolumeCmd()).thenReturn(create);
+
+        CreateVolumeTask.run(c, "data", "local", Map.of(), Map.of(), mock(Logger.class));
+
+        verify(create).withName("data");
+        verify(create).withDriver("local");
+        verify(create, never()).withDriverOpts(anyMap());
+        verify(create, never()).withLabels(anyMap());
+        verify(create).exec();
+    }
+
+    @Test
+    void createsWithLabelsOnlyWhenDriverOptsEmpty() {
+        DockerClient c = mock(DockerClient.class);
+        ListVolumesCmd list = mock(ListVolumesCmd.class);
+        ListVolumesResponse listResp = mock(ListVolumesResponse.class);
+        CreateVolumeCmd create = mock(CreateVolumeCmd.class, RETURNS_SELF);
+
+        when(c.listVolumesCmd()).thenReturn(list);
+        when(list.exec()).thenReturn(listResp);
+        when(listResp.getVolumes()).thenReturn(List.of());
+        when(c.createVolumeCmd()).thenReturn(create);
+
+        CreateVolumeTask.run(c, "data", "local", Map.of(), Map.of("k", "v"), mock(Logger.class));
+
+        verify(create, never()).withDriverOpts(anyMap());
+        verify(create).withLabels(Map.of("k", "v"));
+        verify(create).exec();
+    }
+
+    @Test
+    void createsWithDriverOptsOnlyWhenLabelsEmpty() {
+        DockerClient c = mock(DockerClient.class);
+        ListVolumesCmd list = mock(ListVolumesCmd.class);
+        ListVolumesResponse listResp = mock(ListVolumesResponse.class);
+        CreateVolumeCmd create = mock(CreateVolumeCmd.class, RETURNS_SELF);
+
+        when(c.listVolumesCmd()).thenReturn(list);
+        when(list.exec()).thenReturn(listResp);
+        when(listResp.getVolumes()).thenReturn(List.of());
+        when(c.createVolumeCmd()).thenReturn(create);
+
+        CreateVolumeTask.run(c, "data", "local", Map.of("o", "1"), Map.of(), mock(Logger.class));
+
+        verify(create).withDriverOpts(Map.of("o", "1"));
+        verify(create, never()).withLabels(anyMap());
+        verify(create).exec();
+    }
 }

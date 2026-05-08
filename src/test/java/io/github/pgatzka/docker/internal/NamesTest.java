@@ -55,4 +55,28 @@ class NamesTest {
                 .hasMessageContaining("bad name");
         assertThatThrownBy(() -> Names.toCamel("")).isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void splitsOnDotSeparator() {
+        // `.` is now an allowed character in Docker resource names AND acts as a word boundary.
+        assertThat(Names.toCamel("foo.bar")).isEqualTo("FooBar");
+        assertThat(Names.toCamel("a.b.c")).isEqualTo("ABC");
+    }
+
+    @Test
+    void rejectsNullSpecName() {
+        assertThatThrownBy(() -> Names.toCamel(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("null");
+    }
+
+    @Test
+    void allSeparatorsCollapseToEmptyString() {
+        // The VALID regex matches `___` so the call does not throw; the loop skips every char,
+        // yielding an empty string. Locking this behavior so future regex tightening is intentional.
+        assertThat(Names.toCamel("___")).isEmpty();
+        assertThat(Names.toCamel("---")).isEmpty();
+        assertThat(Names.toCamel("...")).isEmpty();
+        assertThat(Names.toCamel("_-.")).isEmpty();
+    }
 }

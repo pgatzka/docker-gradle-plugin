@@ -43,4 +43,43 @@ class RemoveVolumeTaskTest {
         RemoveVolumeTask.run(c, "data", mock(Logger.class));
         verify(c, never()).removeVolumeCmd(anyString());
     }
+
+    @Test
+    void removesMatchingVolumeWhenMultiplePresent() {
+        DockerClient c = mock(DockerClient.class);
+        ListVolumesCmd list = mock(ListVolumesCmd.class);
+        ListVolumesResponse listResp = mock(ListVolumesResponse.class);
+        InspectVolumeResponse other = mock(InspectVolumeResponse.class);
+        InspectVolumeResponse target = mock(InspectVolumeResponse.class);
+        RemoveVolumeCmd rm = mock(RemoveVolumeCmd.class);
+
+        when(c.listVolumesCmd()).thenReturn(list);
+        when(list.exec()).thenReturn(listResp);
+        when(listResp.getVolumes()).thenReturn(List.of(other, target));
+        when(other.getName()).thenReturn("other");
+        when(target.getName()).thenReturn("data");
+        when(c.removeVolumeCmd("data")).thenReturn(rm);
+
+        RemoveVolumeTask.run(c, "data", mock(Logger.class));
+        verify(rm).exec();
+        verify(c, never()).removeVolumeCmd("other");
+    }
+
+    @Test
+    void noOpWhenMultipleVolumesNoneMatch() {
+        DockerClient c = mock(DockerClient.class);
+        ListVolumesCmd list = mock(ListVolumesCmd.class);
+        ListVolumesResponse listResp = mock(ListVolumesResponse.class);
+        InspectVolumeResponse a = mock(InspectVolumeResponse.class);
+        InspectVolumeResponse b = mock(InspectVolumeResponse.class);
+
+        when(c.listVolumesCmd()).thenReturn(list);
+        when(list.exec()).thenReturn(listResp);
+        when(listResp.getVolumes()).thenReturn(List.of(a, b));
+        when(a.getName()).thenReturn("foo");
+        when(b.getName()).thenReturn("bar");
+
+        RemoveVolumeTask.run(c, "data", mock(Logger.class));
+        verify(c, never()).removeVolumeCmd(anyString());
+    }
 }

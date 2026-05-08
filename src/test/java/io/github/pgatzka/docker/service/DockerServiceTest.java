@@ -44,4 +44,22 @@ class DockerServiceTest {
                 .hasMessageContaining("Docker daemon unreachable")
                 .hasMessageContaining("Is Docker running?");
     }
+
+    @Test
+    void precheckFailsWithWrappedExceptionWhenVersionCmdThrows() {
+        // Ping succeeds but versionCmd().exec() throws — must still be wrapped as GradleException.
+        DockerClient client = mock(DockerClient.class);
+        PingCmd ping = mock(PingCmd.class);
+        VersionCmd ver = mock(VersionCmd.class);
+
+        when(client.pingCmd()).thenReturn(ping);
+        when(client.versionCmd()).thenReturn(ver);
+        when(ver.exec()).thenThrow(new DockerException("api version negotiation failed", 500));
+
+        assertThatThrownBy(() -> DockerService.precheck(client))
+                .isInstanceOf(GradleException.class)
+                .hasMessageContaining("Docker daemon unreachable")
+                .hasMessageContaining("api version negotiation failed")
+                .hasCauseInstanceOf(DockerException.class);
+    }
 }

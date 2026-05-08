@@ -39,4 +39,24 @@ class RemoveNetworkTaskTest {
         RemoveNetworkTask.run(c, "backend", mock(Logger.class));
         verify(c, never()).removeNetworkCmd(anyString());
     }
+
+    @Test
+    void removesByIdWhenMultipleNetworksOneMatches() {
+        DockerClient c = mock(DockerClient.class);
+        ListNetworksCmd list = mock(ListNetworksCmd.class, RETURNS_SELF);
+        Network other = mock(Network.class);
+        Network target = mock(Network.class);
+        RemoveNetworkCmd rm = mock(RemoveNetworkCmd.class);
+
+        when(c.listNetworksCmd()).thenReturn(list);
+        when(list.exec()).thenReturn(List.of(other, target));
+        when(other.getName()).thenReturn("other");
+        when(target.getName()).thenReturn("backend");
+        when(target.getId()).thenReturn("netid");
+        when(c.removeNetworkCmd("netid")).thenReturn(rm);
+
+        RemoveNetworkTask.run(c, "backend", mock(Logger.class));
+        verify(rm).exec();
+        verify(c, never()).removeNetworkCmd("other");
+    }
 }
