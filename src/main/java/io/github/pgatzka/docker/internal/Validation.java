@@ -2,7 +2,7 @@ package io.github.pgatzka.docker.internal;
 
 import io.github.pgatzka.docker.dsl.ContainerSpec;
 import io.github.pgatzka.docker.dsl.DockerExtension;
-import io.github.pgatzka.docker.dsl.NetworkSpec;
+import io.github.pgatzka.docker.dsl.Mounts;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -14,86 +14,86 @@ public final class Validation {
 
     private Validation() {}
 
-    public static void validate(DockerExtension ext) {
+    public static void validate(DockerExtension extension) {
         Set<String> declaredVolumes = new HashSet<>();
-        ext.getVolumes().forEach(v -> declaredVolumes.add(v.getName()));
+        extension.getVolumes().forEach(volume -> declaredVolumes.add(volume.getName()));
         Set<String> declaredNetworks = new HashSet<>();
-        ext.getNetworks().forEach((NetworkSpec n) -> declaredNetworks.add(n.getName()));
+        extension.getNetworks().forEach(network -> declaredNetworks.add(network.getName()));
 
         // Track container-name collisions on the daemon and host-port collisions across containers.
         Map<String, String> containerNameOwner = new HashMap<>();
         Map<Integer, String> hostPortOwner = new HashMap<>();
 
-        ext.getContainers().forEach(c -> {
-            requireImage(c);
-            requireUniqueMountTargets(c);
-            requireDeclaredVolumes(c, declaredVolumes);
-            requireDeclaredNetworks(c, declaredNetworks);
-            requireUniqueContainerName(c, containerNameOwner);
-            requireUniqueHostPorts(c, hostPortOwner);
+        extension.getContainers().forEach(container -> {
+            requireImage(container);
+            requireUniqueMountTargets(container);
+            requireDeclaredVolumes(container, declaredVolumes);
+            requireDeclaredNetworks(container, declaredNetworks);
+            requireUniqueContainerName(container, containerNameOwner);
+            requireUniqueHostPorts(container, hostPortOwner);
         });
     }
 
-    private static void requireImage(ContainerSpec c) {
-        if (!c.getImage().isPresent() || c.getImage().get().isBlank()) {
+    private static void requireImage(ContainerSpec container) {
+        if (!container.getImage().isPresent() || container.getImage().get().isBlank()) {
             throw new GradleException(
-                    "Container " + c.getName() + " has no `image` set. Add `image.set(\"…\")` to the spec.");
+                    "Container " + container.getName() + " has no `image` set. Add `image.set(\"…\")` to the spec.");
         }
     }
 
-    private static void requireUniqueMountTargets(ContainerSpec c) {
-        Set<String> seen = new HashSet<>();
-        for (var vm : c.getMounts().volumes()) {
-            if (!seen.add(vm.containerPath())) {
-                throw new GradleException("Container " + c.getName()
-                        + " has duplicate mount target " + vm.containerPath()
+    private static void requireUniqueMountTargets(ContainerSpec container) {
+        Set<String> seenPaths = new HashSet<>();
+        for (Mounts.VolumeMount volumeMount : container.getMounts().volumes()) {
+            if (!seenPaths.add(volumeMount.containerPath())) {
+                throw new GradleException("Container " + container.getName()
+                        + " has duplicate mount target " + volumeMount.containerPath()
                         + "; each container path may only be mounted once.");
             }
         }
-        for (var bm : c.getMounts().binds()) {
-            if (!seen.add(bm.containerPath())) {
-                throw new GradleException("Container " + c.getName()
-                        + " has duplicate mount target " + bm.containerPath()
+        for (Mounts.BindMount bindMount : container.getMounts().binds()) {
+            if (!seenPaths.add(bindMount.containerPath())) {
+                throw new GradleException("Container " + container.getName()
+                        + " has duplicate mount target " + bindMount.containerPath()
                         + "; each container path may only be mounted once.");
             }
         }
     }
 
-    private static void requireDeclaredVolumes(ContainerSpec c, Set<String> declared) {
-        for (var vm : c.getMounts().volumes()) {
-            if (!declared.contains(vm.volumeName())) {
-                throw new GradleException("Container " + c.getName() + " references undeclared volume "
-                        + vm.volumeName() + ". Declare it in volumes { register(\""
-                        + vm.volumeName() + "\") {} }.");
+    private static void requireDeclaredVolumes(ContainerSpec container, Set<String> declared) {
+        for (Mounts.VolumeMount volumeMount : container.getMounts().volumes()) {
+            if (!declared.contains(volumeMount.volumeName())) {
+                throw new GradleException("Container " + container.getName() + " references undeclared volume "
+                        + volumeMount.volumeName() + ". Declare it in volumes { register(\""
+                        + volumeMount.volumeName() + "\") {} }.");
             }
         }
     }
 
-    private static void requireDeclaredNetworks(ContainerSpec c, Set<String> declared) {
-        for (String n : c.getNetworks().getOrElse(List.of())) {
-            if (!declared.contains(n)) {
-                throw new GradleException("Container " + c.getName() + " references undeclared network "
-                        + n + ". Declare it in networks { register(\""
-                        + n + "\") {} }.");
+    private static void requireDeclaredNetworks(ContainerSpec container, Set<String> declared) {
+        for (String networkName : container.getNetworks().getOrElse(List.of())) {
+            if (!declared.contains(networkName)) {
+                throw new GradleException("Container " + container.getName() + " references undeclared network "
+                        + networkName + ". Declare it in networks { register(\""
+                        + networkName + "\") {} }.");
             }
         }
     }
 
-    private static void requireUniqueContainerName(ContainerSpec c, Map<String, String> owner) {
-        String containerName = c.getContainerName().getOrElse(c.getName());
-        String existing = owner.put(containerName, c.getName());
-        if (existing != null) {
-            throw new GradleException("Containers " + existing + " and " + c.getName()
-                    + " share the daemon-side name '" + containerName
+    private static void requireUniqueContainerName(ContainerSpec container, Map<String, String> owner) {
+        String daemonName = container.getContainerName().getOrElse(container.getName());
+        String existingOwner = owner.put(daemonName, container.getName());
+        if (existingOwner != null) {
+            throw new GradleException("Containers " + existingOwner + " and " + container.getName()
+                    + " share the daemon-side name '" + daemonName
                     + "'. Override `containerName.set(...)` on at least one to disambiguate.");
         }
     }
 
-    private static void requireUniqueHostPorts(ContainerSpec c, Map<Integer, String> owner) {
-        for (Integer hostPort : c.getPorts().getOrElse(Map.of()).keySet()) {
-            String existing = owner.put(hostPort, c.getName());
-            if (existing != null && !existing.equals(c.getName())) {
-                throw new GradleException("Containers " + existing + " and " + c.getName()
+    private static void requireUniqueHostPorts(ContainerSpec container, Map<Integer, String> owner) {
+        for (Integer hostPort : container.getPorts().getOrElse(Map.of()).keySet()) {
+            String existingOwner = owner.put(hostPort, container.getName());
+            if (existingOwner != null && !existingOwner.equals(container.getName())) {
+                throw new GradleException("Containers " + existingOwner + " and " + container.getName()
                         + " both publish host port " + hostPort
                         + "; pick distinct host ports.");
             }

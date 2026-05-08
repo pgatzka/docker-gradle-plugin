@@ -15,27 +15,28 @@ import org.gradle.api.tasks.UntrackedTask;
 public abstract class CreateNetworkTask extends DockerTask {
 
     static void run(
-            DockerClient c,
-            String name,
+            DockerClient client,
+            String networkName,
             String driver,
             Map<String, String> labels,
             boolean internal,
             boolean attachable,
             Logger log) {
-        boolean exists = c.listNetworksCmd().exec().stream().anyMatch(n -> name.equals(n.getName()));
+        boolean exists =
+                client.listNetworksCmd().exec().stream().anyMatch(network -> networkName.equals(network.getName()));
         if (exists) {
-            log.info("Network {} already exists", name);
+            log.info("Network {} already exists", networkName);
             return;
         }
-        log.info("Creating network {}", name);
-        try (CreateNetworkCmd cmd = c.createNetworkCmd()
-                .withName(name)
+        log.info("Creating network {}", networkName);
+        try (CreateNetworkCmd createCmd = client.createNetworkCmd()
+                .withName(networkName)
                 .withDriver(driver)
                 .withInternal(internal)
                 .withAttachable(attachable)) {
-            if (!labels.isEmpty()) cmd.withLabels(labels);
-            cmd.exec();
-            log.info("Created network {}", name);
+            if (!labels.isEmpty()) createCmd.withLabels(labels);
+            createCmd.exec();
+            log.info("Created network {}", networkName);
         }
     }
 

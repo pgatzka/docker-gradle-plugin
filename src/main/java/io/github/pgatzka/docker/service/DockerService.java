@@ -23,13 +23,14 @@ public abstract class DockerService implements BuildService<BuildServiceParamete
     private DockerClient client;
     private volatile boolean prechecked;
 
-    static String precheck(DockerClient c) {
+    static String precheck(DockerClient client) {
         try {
-            c.pingCmd().exec();
-            Version v = c.versionCmd().exec();
-            return v.getVersion();
-        } catch (RuntimeException ex) {
-            throw new GradleException("Docker daemon unreachable: " + ex.getMessage() + ". Is Docker running?", ex);
+            client.pingCmd().exec();
+            Version version = client.versionCmd().exec();
+            return version.getVersion();
+        } catch (RuntimeException unreachable) {
+            throw new GradleException(
+                    "Docker daemon unreachable: " + unreachable.getMessage() + ". Is Docker running?", unreachable);
         }
     }
 
@@ -43,19 +44,20 @@ public abstract class DockerService implements BuildService<BuildServiceParamete
         // Holding `clientLock` only across cheap construction — never the daemon ping.
         synchronized (clientLock) {
             if (client == null) {
-                var cfg = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
-                DockerHttpClient http = new ApacheDockerHttpClient.Builder()
-                        .dockerHost(cfg.getDockerHost())
-                        .sslConfig(cfg.getSSLConfig())
+                var config =
+                        DefaultDockerClientConfig.createDefaultConfigBuilder().build();
+                DockerHttpClient httpClient = new ApacheDockerHttpClient.Builder()
+                        .dockerHost(config.getDockerHost())
+                        .sslConfig(config.getSSLConfig())
                         .build();
-                client = DockerClientImpl.getInstance(cfg, http);
-                LOG.info("Connecting to Docker daemon at {}", cfg.getDockerHost());
+                client = DockerClientImpl.getInstance(config, httpClient);
+                LOG.info("Connecting to Docker daemon at {}", config.getDockerHost());
             }
             return client;
         }
     }
 
-    private void ensurePrechecked(DockerClient c) {
+    private void ensurePrechecked(DockerClient candidate) {
         if (prechecked) {
             return;
         }
@@ -65,7 +67,7 @@ public abstract class DockerService implements BuildService<BuildServiceParamete
             if (prechecked) {
                 return;
             }
-            String version = precheck(c);
+            String version = precheck(candidate);
             LOG.info("Daemon reachable: {}", version);
             prechecked = true;
         }
@@ -74,12 +76,12 @@ public abstract class DockerService implements BuildService<BuildServiceParamete
     @Override
     public void close() throws IOException {
         synchronized (clientLock) {
-            DockerClient c = client;
+            DockerClient toClose = client;
             // Reset state up front so a failing close() doesn't leave a stale client around.
             client = null;
             prechecked = false;
-            if (c != null) {
-                c.close();
+            if (toClose != null) {
+                toClose.close();
             }
         }
     }

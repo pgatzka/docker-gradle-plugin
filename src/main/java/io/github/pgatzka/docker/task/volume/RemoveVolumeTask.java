@@ -11,15 +11,16 @@ import org.gradle.api.tasks.UntrackedTask;
 @UntrackedTask(because = "Docker daemon side effects must always run")
 public abstract class RemoveVolumeTask extends DockerTask {
 
-    static void run(DockerClient c, String name, Logger log) {
-        boolean exists = c.listVolumesCmd().exec().getVolumes().stream().anyMatch(v -> name.equals(v.getName()));
+    static void run(DockerClient client, String volumeName, Logger log) {
+        boolean exists = client.listVolumesCmd().exec().getVolumes().stream()
+                .anyMatch(volume -> volumeName.equals(volume.getName()));
         if (!exists) {
-            log.info("Volume {} not present; nothing to remove", name);
+            log.info("Volume {} not present; nothing to remove", volumeName);
             return;
         }
-        log.info("Removing volume {}", name);
-        c.removeVolumeCmd(name).exec();
-        log.info("Removed volume {}", name);
+        log.info("Removing volume {}", volumeName);
+        client.removeVolumeCmd(volumeName).exec();
+        log.info("Removed volume {}", volumeName);
     }
 
     @Input

@@ -15,23 +15,25 @@ import org.gradle.api.tasks.UntrackedTask;
 public abstract class CreateVolumeTask extends DockerTask {
 
     static void run(
-            DockerClient c,
-            String name,
+            DockerClient client,
+            String volumeName,
             String driver,
-            Map<String, String> opts,
+            Map<String, String> driverOpts,
             Map<String, String> labels,
             Logger log) {
-        boolean exists = c.listVolumesCmd().exec().getVolumes().stream().anyMatch(v -> name.equals(v.getName()));
+        boolean exists = client.listVolumesCmd().exec().getVolumes().stream()
+                .anyMatch(volume -> volumeName.equals(volume.getName()));
         if (exists) {
-            log.info("Volume {} already exists", name);
+            log.info("Volume {} already exists", volumeName);
             return;
         }
-        log.info("Creating volume {}", name);
-        try (CreateVolumeCmd cmd = c.createVolumeCmd().withName(name).withDriver(driver)) {
-            if (!opts.isEmpty()) cmd.withDriverOpts(opts);
-            if (!labels.isEmpty()) cmd.withLabels(labels);
-            cmd.exec();
-            log.info("Created volume {}", name);
+        log.info("Creating volume {}", volumeName);
+        try (CreateVolumeCmd createCmd =
+                client.createVolumeCmd().withName(volumeName).withDriver(driver)) {
+            if (!driverOpts.isEmpty()) createCmd.withDriverOpts(driverOpts);
+            if (!labels.isEmpty()) createCmd.withLabels(labels);
+            createCmd.exec();
+            log.info("Created volume {}", volumeName);
         }
     }
 

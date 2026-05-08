@@ -2,6 +2,7 @@ package io.github.pgatzka.docker;
 
 import io.github.pgatzka.docker.dsl.ContainerSpec;
 import io.github.pgatzka.docker.dsl.DockerExtension;
+import io.github.pgatzka.docker.dsl.Mounts;
 import io.github.pgatzka.docker.dsl.NetworkSpec;
 import io.github.pgatzka.docker.dsl.VolumeSpec;
 import io.github.pgatzka.docker.internal.Names;
@@ -45,73 +46,76 @@ public class DockerPlugin implements Plugin<Project> {
         project.getGradle().getSharedServices().registerIfAbsent(DOCKER_SERVICE_NAME, DockerService.class, spec -> {});
 
         ext.getVolumes().all(spec -> {
-            project.getTasks().register(Names.createVolumeTask(spec.getName()), CreateVolumeTask.class, t -> {
-                t.setDescription("Creates Docker volume '" + spec.getName() + "'.");
-                t.getVolumeName().set(spec.getName());
-                t.getDriver().set(spec.getDriver());
-                t.getDriverOpts().set(spec.getDriverOpts());
-                t.getLabels().set(spec.getLabels());
+            project.getTasks().register(Names.createVolumeTask(spec.getName()), CreateVolumeTask.class, task -> {
+                task.setDescription("Creates Docker volume '" + spec.getName() + "'.");
+                task.getVolumeName().set(spec.getName());
+                task.getDriver().set(spec.getDriver());
+                task.getDriverOpts().set(spec.getDriverOpts());
+                task.getLabels().set(spec.getLabels());
             });
-            project.getTasks().register(Names.removeVolumeTask(spec.getName()), RemoveVolumeTask.class, t -> {
-                t.setDescription("Removes Docker volume '" + spec.getName() + "'.");
-                t.getVolumeName().set(spec.getName());
+            project.getTasks().register(Names.removeVolumeTask(spec.getName()), RemoveVolumeTask.class, task -> {
+                task.setDescription("Removes Docker volume '" + spec.getName() + "'.");
+                task.getVolumeName().set(spec.getName());
             });
         });
 
         ext.getNetworks().all(spec -> {
-            project.getTasks().register(Names.createNetworkTask(spec.getName()), CreateNetworkTask.class, t -> {
-                t.setDescription("Creates Docker network '" + spec.getName() + "'.");
-                t.getNetworkName().set(spec.getName());
-                t.getDriver().set(spec.getDriver());
-                t.getLabels().set(spec.getLabels());
-                t.getInternal().set(spec.getInternal());
-                t.getAttachable().set(spec.getAttachable());
+            project.getTasks().register(Names.createNetworkTask(spec.getName()), CreateNetworkTask.class, task -> {
+                task.setDescription("Creates Docker network '" + spec.getName() + "'.");
+                task.getNetworkName().set(spec.getName());
+                task.getDriver().set(spec.getDriver());
+                task.getLabels().set(spec.getLabels());
+                task.getInternal().set(spec.getInternal());
+                task.getAttachable().set(spec.getAttachable());
             });
-            project.getTasks().register(Names.removeNetworkTask(spec.getName()), RemoveNetworkTask.class, t -> {
-                t.setDescription("Removes Docker network '" + spec.getName() + "'.");
-                t.getNetworkName().set(spec.getName());
+            project.getTasks().register(Names.removeNetworkTask(spec.getName()), RemoveNetworkTask.class, task -> {
+                task.setDescription("Removes Docker network '" + spec.getName() + "'.");
+                task.getNetworkName().set(spec.getName());
             });
         });
 
         ext.getContainers().all(spec -> {
-            project.getTasks().register(Names.startTask(spec.getName()), StartContainerTask.class, t -> {
-                t.setDescription("Starts Docker container '" + spec.getName() + "'.");
-                t.getContainerName().set(spec.getContainerName());
-                t.getImage().set(spec.getImage());
-                t.getEnvironment().set(spec.getEnvironment());
-                t.getPorts().set(spec.getPorts());
-                t.getNetworks().set(spec.getNetworks());
-                t.getCommand().set(spec.getCommand());
-                t.getVolumeMounts().set(project.provider(() -> spec.getMounts().volumes()));
-                t.getBindMounts().set(project.provider(() -> spec.getMounts().binds()));
-                t.getWaitFor().set(spec.getWaitFor());
-                t.getWaitTimeout().set(spec.getWaitTimeout());
-                t.getPullPolicy().set(spec.getPullPolicy());
+            project.getTasks().register(Names.startTask(spec.getName()), StartContainerTask.class, task -> {
+                task.setDescription("Starts Docker container '" + spec.getName() + "'.");
+                task.getContainerName().set(spec.getContainerName());
+                task.getImage().set(spec.getImage());
+                task.getEnvironment().set(spec.getEnvironment());
+                task.getPorts().set(spec.getPorts());
+                task.getNetworks().set(spec.getNetworks());
+                task.getCommand().set(spec.getCommand());
+                task.getVolumeMounts()
+                        .set(project.provider(() -> spec.getMounts().volumes()));
+                task.getBindMounts().set(project.provider(() -> spec.getMounts().binds()));
+                task.getWaitFor().set(spec.getWaitFor());
+                task.getWaitTimeout().set(spec.getWaitTimeout());
+                task.getPullPolicy().set(spec.getPullPolicy());
 
-                // Lazy auto-dependsOn for referenced volumes and networks. Cast pins the
-                // type parameter so Sonar's ECJ parser can resolve the overload.
+                // Lazy auto-dependsOn for referenced volumes and networks. Splitting the
+                // Callable from the Provider declaration pins the type parameter so Sonar's
+                // ECJ parser can resolve the overload (it doesn't propagate target-type info
+                // backwards into the lambda the way javac does).
                 Callable<List<String>> autoDepsCallable = () -> {
                     List<String> deps = new ArrayList<>();
-                    for (var vm : spec.getMounts().volumes()) {
-                        deps.add(Names.createVolumeTask(vm.volumeName()));
+                    for (Mounts.VolumeMount volumeMount : spec.getMounts().volumes()) {
+                        deps.add(Names.createVolumeTask(volumeMount.volumeName()));
                     }
-                    for (String n : spec.getNetworks().getOrElse(List.of())) {
-                        deps.add(Names.createNetworkTask(n));
+                    for (String networkName : spec.getNetworks().getOrElse(List.of())) {
+                        deps.add(Names.createNetworkTask(networkName));
                     }
                     return deps;
                 };
                 Provider<List<String>> autoDeps = project.provider(autoDepsCallable);
-                t.dependsOn(autoDeps);
+                task.dependsOn(autoDeps);
             });
 
-            project.getTasks().register(Names.stopTask(spec.getName()), StopContainerTask.class, t -> {
-                t.setDescription("Stops Docker container '" + spec.getName() + "'.");
-                t.getContainerName().set(spec.getContainerName());
-                t.getStopTimeout().set(spec.getStopTimeout());
+            project.getTasks().register(Names.stopTask(spec.getName()), StopContainerTask.class, task -> {
+                task.setDescription("Stops Docker container '" + spec.getName() + "'.");
+                task.getContainerName().set(spec.getContainerName());
+                task.getStopTimeout().set(spec.getStopTimeout());
             });
-            project.getTasks().register(Names.removeContainerTask(spec.getName()), RemoveContainerTask.class, t -> {
-                t.setDescription("Removes Docker container '" + spec.getName() + "'.");
-                t.getContainerName().set(spec.getContainerName());
+            project.getTasks().register(Names.removeContainerTask(spec.getName()), RemoveContainerTask.class, task -> {
+                task.setDescription("Removes Docker container '" + spec.getName() + "'.");
+                task.getContainerName().set(spec.getContainerName());
             });
         });
 

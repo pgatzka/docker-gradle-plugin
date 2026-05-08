@@ -35,31 +35,31 @@ public final class Names {
         CREATE
     }
 
-    public static String startTask(String n) {
-        return TaskType.START.name().toLowerCase() + toCamel(n);
+    public static String startTask(String specName) {
+        return TaskType.START.name().toLowerCase() + toCamel(specName);
     }
 
-    public static String stopTask(String n) {
-        return TaskType.STOP.name().toLowerCase() + toCamel(n);
+    public static String stopTask(String specName) {
+        return TaskType.STOP.name().toLowerCase() + toCamel(specName);
     }
 
-    public static String removeContainerTask(String n) {
-        return TaskType.REMOVE.name().toLowerCase() + "Container" + toCamel(n);
+    public static String removeContainerTask(String specName) {
+        return TaskType.REMOVE.name().toLowerCase() + "Container" + toCamel(specName);
     }
 
-    public static String createVolumeTask(String n) {
-        return TaskType.CREATE.name().toLowerCase() + "Volume" + toCamel(n);
+    public static String createVolumeTask(String specName) {
+        return TaskType.CREATE.name().toLowerCase() + "Volume" + toCamel(specName);
     }
 
-    public static String removeVolumeTask(String n) {
-        return TaskType.REMOVE.name().toLowerCase() + "Volume" + toCamel(n);
+    public static String removeVolumeTask(String specName) {
+        return TaskType.REMOVE.name().toLowerCase() + "Volume" + toCamel(specName);
     }
 
-    public static String createNetworkTask(String n) {
-        return TaskType.CREATE.name().toLowerCase() + "Network" + toCamel(n);
+    public static String createNetworkTask(String specName) {
+        return TaskType.CREATE.name().toLowerCase() + "Network" + toCamel(specName);
     }
 
-    public static String removeNetworkTask(String n) {
-        return TaskType.REMOVE.name().toLowerCase() + "Network" + toCamel(n);
+    public static String removeNetworkTask(String specName) {
+        return TaskType.REMOVE.name().toLowerCase() + "Network" + toCamel(specName);
     }
 }

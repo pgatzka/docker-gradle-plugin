@@ -15,29 +15,31 @@ import org.gradle.api.tasks.UntrackedTask;
 @UntrackedTask(because = "Docker daemon side effects must always run")
 public abstract class StopContainerTask extends DockerTask {
 
-    static void run(DockerClient c, String name, Duration timeout, Logger log) {
-        InspectContainerResponse r;
+    static void run(DockerClient client, String containerName, Duration timeout, Logger log) {
+        InspectContainerResponse inspect;
         try {
-            r = c.inspectContainerCmd(name).exec();
-        } catch (NotFoundException nf) {
-            log.info("Container {} not present; nothing to stop", name);
+            inspect = client.inspectContainerCmd(containerName).exec();
+        } catch (NotFoundException notFound) {
+            log.info("Container {} not present; nothing to stop", containerName);
             return;
         }
-        if (r.getState() == null || !Boolean.TRUE.equals(r.getState().getRunning())) {
-            log.info("Container {} already stopped", name);
+        if (inspect.getState() == null
+                || !Boolean.TRUE.equals(inspect.getState().getRunning())) {
+            log.info("Container {} already stopped", containerName);
             return;
         }
-        long secs = timeout.toSeconds();
-        int timeoutSecs = secs > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) Math.max(0, secs);
-        log.info("Stopping container {} (timeout={}s)", name, timeoutSecs);
+        long timeoutSecondsLong = timeout.toSeconds();
+        int timeoutSeconds =
+                timeoutSecondsLong > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) Math.max(0, timeoutSecondsLong);
+        log.info("Stopping container {} (timeout={}s)", containerName, timeoutSeconds);
         try {
-            c.stopContainerCmd(name).withTimeout(timeoutSecs).exec();
-        } catch (NotModifiedException nm) {
+            client.stopContainerCmd(containerName).withTimeout(timeoutSeconds).exec();
+        } catch (NotModifiedException alreadyStopped) {
             // Container exited between our inspect and the stop call (HTTP 304). Benign.
-            log.info("Container {} exited before stop completed", name);
+            log.info("Container {} exited before stop completed", containerName);
             return;
         }
-        log.info("Stopped container {}", name);
+        log.info("Stopped container {}", containerName);
     }
 
     @Input

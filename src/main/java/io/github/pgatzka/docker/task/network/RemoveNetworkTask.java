@@ -13,17 +13,17 @@ import org.gradle.api.tasks.UntrackedTask;
 @UntrackedTask(because = "Docker daemon side effects must always run")
 public abstract class RemoveNetworkTask extends DockerTask {
 
-    static void run(DockerClient c, String name, Logger log) {
-        Optional<Network> existing = c.listNetworksCmd().exec().stream()
-                .filter(n -> name.equals(n.getName()))
+    static void run(DockerClient client, String networkName, Logger log) {
+        Optional<Network> existing = client.listNetworksCmd().exec().stream()
+                .filter(network -> networkName.equals(network.getName()))
                 .findFirst();
         if (existing.isEmpty()) {
-            log.info("Network {} not present; nothing to remove", name);
+            log.info("Network {} not present; nothing to remove", networkName);
             return;
         }
-        log.info("Removing network {}", name);
-        c.removeNetworkCmd(existing.get().getId()).exec();
-        log.info("Removed network {}", name);
+        log.info("Removing network {}", networkName);
+        client.removeNetworkCmd(existing.get().getId()).exec();
+        log.info("Removed network {}", networkName);
     }
 
     @Input
