@@ -5,7 +5,9 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.work.DisableCachingByDefault;
 
+@DisableCachingByDefault(because = "Docker daemon side effects must always run")
 public abstract class RemoveVolumeTask extends DockerTask {
 
     @Input public abstract Property<String> getVolumeName();

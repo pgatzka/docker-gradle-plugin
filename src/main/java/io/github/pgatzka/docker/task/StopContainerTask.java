@@ -7,9 +7,11 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.work.DisableCachingByDefault;
 
 import java.time.Duration;
 
+@DisableCachingByDefault(because = "Docker daemon side effects must always run")
 public abstract class StopContainerTask extends DockerTask {
 
     @Input public abstract Property<String> getContainerName();
