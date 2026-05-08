@@ -149,3 +149,10 @@ gradlePlugin {
     }
     testSourceSets(sourceSets["functionalTest"])
 }
+
+release {
+    git {
+        requireBranch = "main"
+    }
+    buildTasks = listOf("build", "publish", "publishPlugins")
+}
