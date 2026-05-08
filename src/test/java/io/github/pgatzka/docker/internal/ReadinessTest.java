@@ -188,8 +188,7 @@ class ReadinessTest {
             return cb;
         });
 
-        assertThatNoException()
-                .isThrownBy(() -> Readiness.logLine(c, "cid", ".*ready.*", Duration.ofSeconds(2)));
+        assertThatNoException().isThrownBy(() -> Readiness.logLine(c, "cid", ".*ready.*", Duration.ofSeconds(2)));
     }
 
     @Test
@@ -231,9 +230,7 @@ class ReadinessTest {
         worker.interrupt();
         worker.join(5_000);
         assertThat(worker.isAlive()).isFalse();
-        assertThat(thrown[0])
-                .isInstanceOf(NotReadyException.class)
-                .hasMessageContaining("Interrupted while waiting");
+        assertThat(thrown[0]).isInstanceOf(NotReadyException.class).hasMessageContaining("Interrupted while waiting");
     }
 
     @Test
@@ -249,8 +246,7 @@ class ReadinessTest {
             return cb;
         });
 
-        assertThatNoException()
-                .isThrownBy(() -> Readiness.logLine(c, "cid", ".*ready.*", Duration.ofSeconds(2)));
+        assertThatNoException().isThrownBy(() -> Readiness.logLine(c, "cid", ".*ready.*", Duration.ofSeconds(2)));
     }
 
     @Test
@@ -270,8 +266,7 @@ class ReadinessTest {
             return cb;
         });
 
-        assertThatNoException()
-                .isThrownBy(() -> Readiness.logLine(c, "cid", ".*ready.*", Duration.ofSeconds(2)));
+        assertThatNoException().isThrownBy(() -> Readiness.logLine(c, "cid", ".*ready.*", Duration.ofSeconds(2)));
     }
 
     private static Frame frame(String payload) {

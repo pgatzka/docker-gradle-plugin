@@ -4,7 +4,6 @@ import io.github.pgatzka.docker.dsl.PullPolicy;
 import io.github.pgatzka.docker.dsl.mount.BindMount;
 import io.github.pgatzka.docker.dsl.mount.VolumeMount;
 import io.github.pgatzka.docker.dsl.waitable.Waitable;
-
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -20,5 +19,4 @@ public record StartContainerTaskParams(
         List<BindMount> bindMounts,
         Waitable waitable,
         Duration waitTimeout,
-        PullPolicy pullPolicy) {
-}
+        PullPolicy pullPolicy) {}

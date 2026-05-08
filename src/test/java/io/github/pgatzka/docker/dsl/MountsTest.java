@@ -22,9 +22,7 @@ class MountsTest {
                         new VolumeMount("codegen_data", "/var/lib/postgresql", false),
                         new VolumeMount("scratch", "/tmp/scratch", true));
         assertThat(m.binds())
-                .containsExactly(
-                        new BindMount("./sql", "/init", false),
-                        new BindMount("./conf", "/etc/conf", true));
+                .containsExactly(new BindMount("./sql", "/init", false), new BindMount("./conf", "/etc/conf", true));
     }
 
     @Test

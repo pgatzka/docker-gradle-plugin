@@ -1,11 +1,10 @@
 package io.github.pgatzka.docker.dsl.spec;
 
-import java.time.Duration;
-import javax.inject.Inject;
-
 import io.github.pgatzka.docker.dsl.Mounts;
 import io.github.pgatzka.docker.dsl.PullPolicy;
 import io.github.pgatzka.docker.dsl.waitable.Waitable;
+import java.time.Duration;
+import javax.inject.Inject;
 import lombok.Getter;
 import org.gradle.api.Action;
 import org.gradle.api.Named;

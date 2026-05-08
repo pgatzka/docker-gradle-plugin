@@ -18,14 +18,13 @@ import com.github.dockerjava.api.model.HealthCheck;
 import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.Image;
 import io.github.pgatzka.docker.dsl.PullPolicy;
+import io.github.pgatzka.docker.dsl.mount.BindMount;
+import io.github.pgatzka.docker.dsl.mount.VolumeMount;
 import io.github.pgatzka.docker.dsl.waitable.Waitable;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
-import io.github.pgatzka.docker.dsl.mount.BindMount;
-import io.github.pgatzka.docker.dsl.mount.VolumeMount;
 import org.gradle.api.GradleException;
 import org.gradle.api.logging.Logger;
 import org.junit.jupiter.api.Test;

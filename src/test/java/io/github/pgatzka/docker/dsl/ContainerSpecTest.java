@@ -2,13 +2,12 @@ package io.github.pgatzka.docker.dsl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.Duration;
-import java.util.List;
-import java.util.Map;
-
 import io.github.pgatzka.docker.dsl.spec.ContainerSpec;
 import io.github.pgatzka.docker.dsl.waitable.None;
 import io.github.pgatzka.docker.dsl.waitable.Waitable;
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.jupiter.api.Test;
 

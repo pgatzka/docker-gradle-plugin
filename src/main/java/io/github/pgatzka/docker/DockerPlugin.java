@@ -1,8 +1,8 @@
 package io.github.pgatzka.docker;
 
+import io.github.pgatzka.docker.dsl.DockerExtension;
 import io.github.pgatzka.docker.dsl.mount.VolumeMount;
 import io.github.pgatzka.docker.dsl.spec.ContainerSpec;
-import io.github.pgatzka.docker.dsl.DockerExtension;
 import io.github.pgatzka.docker.dsl.spec.NetworkSpec;
 import io.github.pgatzka.docker.dsl.spec.VolumeSpec;
 import io.github.pgatzka.docker.internal.Names;
@@ -18,7 +18,6 @@ import io.github.pgatzka.docker.task.volume.RemoveVolumeTask;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
-
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Provider;
@@ -120,5 +119,4 @@ public class DockerPlugin implements Plugin<Project> {
 
         project.afterEvaluate(p -> Validation.validate(ext));
     }
-
 }

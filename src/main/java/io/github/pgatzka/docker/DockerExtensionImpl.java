@@ -4,10 +4,9 @@ import io.github.pgatzka.docker.dsl.DockerExtension;
 import io.github.pgatzka.docker.dsl.spec.ContainerSpec;
 import io.github.pgatzka.docker.dsl.spec.NetworkSpec;
 import io.github.pgatzka.docker.dsl.spec.VolumeSpec;
+import javax.inject.Inject;
 import lombok.Getter;
 import org.gradle.api.NamedDomainObjectContainer;
-
-import javax.inject.Inject;
 
 @Getter
 public abstract class DockerExtensionImpl implements DockerExtension {
@@ -27,5 +26,4 @@ public abstract class DockerExtensionImpl implements DockerExtension {
         this.volumes = volumes;
         this.networks = networks;
     }
-
 }

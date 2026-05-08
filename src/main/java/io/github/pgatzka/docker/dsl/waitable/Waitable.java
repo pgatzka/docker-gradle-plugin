@@ -2,8 +2,7 @@ package io.github.pgatzka.docker.dsl.waitable;
 
 import java.io.Serializable;
 
-public sealed interface Waitable extends Serializable
-        permits Healthcheck, LogLine, TcpPort, None {
+public sealed interface Waitable extends Serializable permits Healthcheck, LogLine, TcpPort, None {
 
     static Waitable healthcheck() {
         return new Healthcheck();
@@ -20,5 +19,4 @@ public sealed interface Waitable extends Serializable
     static Waitable none() {
         return new None();
     }
-
 }

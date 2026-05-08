@@ -14,16 +14,6 @@ import io.github.pgatzka.docker.dsl.mount.VolumeMount;
 import io.github.pgatzka.docker.dsl.waitable.*;
 import io.github.pgatzka.docker.internal.Readiness;
 import io.github.pgatzka.docker.task.DockerTask;
-import org.gradle.api.GradleException;
-import org.gradle.api.logging.Logger;
-import org.gradle.api.provider.ListProperty;
-import org.gradle.api.provider.MapProperty;
-import org.gradle.api.provider.Property;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.TaskAction;
-import org.gradle.api.tasks.UntrackedTask;
-
 import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
@@ -33,6 +23,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
+import org.gradle.api.GradleException;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.MapProperty;
+import org.gradle.api.provider.Property;
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.UntrackedTask;
 
 @UntrackedTask(because = "Docker daemon side effects must always run")
 public abstract class StartContainerTask extends DockerTask {
@@ -118,7 +117,8 @@ public abstract class StartContainerTask extends DockerTask {
         return test != null && !test.isEmpty() && "NONE".equals(test.get(0));
     }
 
-    private static EnsureResult ensureContainerExists(DockerClient client, StartContainerTaskParams params, Logger log) {
+    private static EnsureResult ensureContainerExists(
+            DockerClient client, StartContainerTaskParams params, Logger log) {
         Optional<String> existingId = findExistingContainerId(client, params.containerName());
         if (existingId.isPresent()) {
             log.info("Container {} already exists ({})", params.containerName(), existingId.get());
@@ -143,7 +143,7 @@ public abstract class StartContainerTask extends DockerTask {
 
     private static String createContainer(DockerClient client, StartContainerTaskParams params) {
         try (CreateContainerCmd createCmd =
-                     client.createContainerCmd(params.image()).withName(params.containerName())) {
+                client.createContainerCmd(params.image()).withName(params.containerName())) {
             applyEnvironment(createCmd, params.env());
             applyCommand(createCmd, params.command());
             applyPorts(createCmd, params.ports());
@@ -231,7 +231,8 @@ public abstract class StartContainerTask extends DockerTask {
         return fresh;
     }
 
-    private static void startContainer(DockerClient client, StartContainerTaskParams params, EnsureResult ensured, Logger log) {
+    private static void startContainer(
+            DockerClient client, StartContainerTaskParams params, EnsureResult ensured, Logger log) {
         if (!ensured.justCreated && isAlreadyRunningOrUnstartable(client, params, log)) {
             return;
         }
@@ -245,7 +246,8 @@ public abstract class StartContainerTask extends DockerTask {
      * {@link GradleException} when the container is in a state that requires explicit
      * removal before it can be started again.
      */
-    private static boolean isAlreadyRunningOrUnstartable(DockerClient client, StartContainerTaskParams params, Logger log) {
+    private static boolean isAlreadyRunningOrUnstartable(
+            DockerClient client, StartContainerTaskParams params, Logger log) {
         InspectContainerResponse inspect =
                 client.inspectContainerCmd(params.containerName()).exec();
         var state = inspect.getState();
@@ -258,8 +260,8 @@ public abstract class StartContainerTask extends DockerTask {
         }
         String status = state.getStatus() == null ? "unknown" : state.getStatus();
         if ("paused".equals(status) || "dead".equals(status) || "removing".equals(status)) {
-            throw new GradleException("Container " + params.containerName() + " is in state '" + status + "'. Run remove"
-                    + capitalize(params.containerName()) + " first.");
+            throw new GradleException("Container " + params.containerName() + " is in state '" + status
+                    + "'. Run remove" + capitalize(params.containerName()) + " first.");
         }
         return false;
     }
@@ -274,10 +276,10 @@ public abstract class StartContainerTask extends DockerTask {
                 /* no wait */
             }
             case Healthcheck ignored ->
-                    Readiness.healthcheck(client, params.containerName(), params.waitTimeout(), READINESS_POLL_INTERVAL);
+                Readiness.healthcheck(client, params.containerName(), params.waitTimeout(), READINESS_POLL_INTERVAL);
             case TcpPort(int containerPort) -> waitForTcp(client, params, containerPort);
             case LogLine(String regex) ->
-                    Readiness.logLine(client, params.containerName(), regex, params.waitTimeout());
+                Readiness.logLine(client, params.containerName(), regex, params.waitTimeout());
         }
         log.info("Ready");
     }
@@ -382,6 +384,5 @@ public abstract class StartContainerTask extends DockerTask {
                 getLogger());
     }
 
-    private record EnsureResult(String id, boolean justCreated) {
-    }
+    private record EnsureResult(String id, boolean justCreated) {}
 }

@@ -1,7 +1,6 @@
 package io.github.pgatzka.docker.dsl.spec;
 
 import javax.inject.Inject;
-
 import lombok.Getter;
 import org.gradle.api.Named;
 import org.gradle.api.provider.MapProperty;

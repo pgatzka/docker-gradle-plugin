@@ -1,10 +1,9 @@
 package io.github.pgatzka.docker.internal;
 
+import io.github.pgatzka.docker.dsl.DockerExtension;
 import io.github.pgatzka.docker.dsl.mount.BindMount;
 import io.github.pgatzka.docker.dsl.mount.VolumeMount;
 import io.github.pgatzka.docker.dsl.spec.ContainerSpec;
-import io.github.pgatzka.docker.dsl.DockerExtension;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
