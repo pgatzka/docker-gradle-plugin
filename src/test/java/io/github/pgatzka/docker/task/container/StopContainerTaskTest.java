@@ -1,4 +1,4 @@
-package io.github.pgatzka.docker.task;
+package io.github.pgatzka.docker.task.container;
 
 import static org.mockito.Mockito.*;
 
@@ -9,6 +9,7 @@ import com.github.dockerjava.api.command.StopContainerCmd;
 import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.exception.NotModifiedException;
 import java.time.Duration;
+
 import org.gradle.api.logging.Logger;
 import org.junit.jupiter.api.Test;
 

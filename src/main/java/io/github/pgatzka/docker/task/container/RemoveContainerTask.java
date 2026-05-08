@@ -1,7 +1,8 @@
-package io.github.pgatzka.docker.task;
+package io.github.pgatzka.docker.task.container;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.exception.NotFoundException;
+import io.github.pgatzka.docker.task.DockerTask;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;

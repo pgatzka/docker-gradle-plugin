@@ -1,4 +1,4 @@
-package io.github.pgatzka.docker.task;
+package io.github.pgatzka.docker.task.network;
 
 import static org.mockito.Mockito.*;
 
@@ -7,6 +7,7 @@ import com.github.dockerjava.api.command.ListNetworksCmd;
 import com.github.dockerjava.api.command.RemoveNetworkCmd;
 import com.github.dockerjava.api.model.Network;
 import java.util.List;
+
 import org.gradle.api.logging.Logger;
 import org.junit.jupiter.api.Test;
 

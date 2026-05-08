@@ -1,4 +1,4 @@
-package io.github.pgatzka.docker.task;
+package io.github.pgatzka.docker.task.container;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
@@ -12,6 +12,7 @@ import io.github.pgatzka.docker.dsl.WaitFor;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+
 import org.gradle.api.GradleException;
 import org.gradle.api.logging.Logger;
 import org.junit.jupiter.api.Test;

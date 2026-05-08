@@ -1,4 +1,4 @@
-package io.github.pgatzka.docker.task;
+package io.github.pgatzka.docker.task.container;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerCmd;
@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
+
+import io.github.pgatzka.docker.task.DockerTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.ListProperty;

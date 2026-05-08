@@ -1,4 +1,4 @@
-package io.github.pgatzka.docker.task;
+package io.github.pgatzka.docker.task.container;
 
 import static org.mockito.Mockito.*;
 

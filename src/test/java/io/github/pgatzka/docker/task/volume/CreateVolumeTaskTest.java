@@ -1,4 +1,4 @@
-package io.github.pgatzka.docker.task;
+package io.github.pgatzka.docker.task.volume;
 
 import static org.mockito.Mockito.*;
 
@@ -9,6 +9,7 @@ import com.github.dockerjava.api.command.ListVolumesCmd;
 import com.github.dockerjava.api.command.ListVolumesResponse;
 import java.util.List;
 import java.util.Map;
+
 import org.gradle.api.logging.Logger;
 import org.junit.jupiter.api.Test;
 

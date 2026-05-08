@@ -7,7 +7,13 @@ import io.github.pgatzka.docker.dsl.VolumeSpec;
 import io.github.pgatzka.docker.internal.Names;
 import io.github.pgatzka.docker.internal.Validation;
 import io.github.pgatzka.docker.service.DockerService;
-import io.github.pgatzka.docker.task.*;
+import io.github.pgatzka.docker.task.container.RemoveContainerTask;
+import io.github.pgatzka.docker.task.container.StartContainerTask;
+import io.github.pgatzka.docker.task.container.StopContainerTask;
+import io.github.pgatzka.docker.task.network.CreateNetworkTask;
+import io.github.pgatzka.docker.task.network.RemoveNetworkTask;
+import io.github.pgatzka.docker.task.volume.CreateVolumeTask;
+import io.github.pgatzka.docker.task.volume.RemoveVolumeTask;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
