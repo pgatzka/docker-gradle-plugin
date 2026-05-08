@@ -1,0 +1,82 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Which part of the version to bump'
+        type: choice
+        options: [ major, minor, patch ]
+        required: true
+        default: patch
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Set up Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Cache Gradle packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          restore-keys: ${{ runner.os }}-gradle
+      - name: Configure git
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Compute release & next versions
+        id: versions
+        run: |
+          set -euo pipefail
+          CURRENT=$(grep '^version=' gradle.properties | cut -d'=' -f2)
+          echo "Current version: $CURRENT"
+
+          if [[ "$CURRENT" != *-SNAPSHOT ]]; then
+            echo "::error::Current version ($CURRENT) is not a SNAPSHOT. Refusing to release."
+            exit 1
+          fi
+
+          RELEASE="${CURRENT%-SNAPSHOT}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$RELEASE"
+
+          case "${{ inputs.bump }}" in
+            major) NEXT="$((MAJOR + 1)).0.0-SNAPSHOT" ;;
+            minor) NEXT="${MAJOR}.$((MINOR + 1)).0-SNAPSHOT" ;;
+            patch) NEXT="${MAJOR}.${MINOR}.$((PATCH + 1))-SNAPSHOT" ;;
+          esac
+
+          echo "Release version: $RELEASE"
+          echo "Next dev version: $NEXT"
+          echo "release=$RELEASE" >> "$GITHUB_OUTPUT"
+          echo "next=$NEXT" >> "$GITHUB_OUTPUT"
+
+      - name: Run gradle release
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./gradlew release \
+            -Prelease.useAutomaticVersion=true \
+            -Prelease.releaseVersion=${{ steps.versions.outputs.release }} \
+            -Prelease.newVersion=${{ steps.versions.outputs.next }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ steps.versions.outputs.release }}
+          name: ${{ steps.versions.outputs.release }}
+          generate_release_notes: true
+          files: |
+            build/libs/*.jar

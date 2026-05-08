@@ -1,4 +1,5 @@
 plugins {
+    id("net.researchgate.release") version "3.1.0"
     id("io.freefair.lombok") version "9.5.0"
     id("java-gradle-plugin")
     id("com.gradle.plugin-publish") version "2.1.1"
