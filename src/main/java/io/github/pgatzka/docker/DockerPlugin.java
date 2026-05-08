@@ -79,7 +79,7 @@ public class DockerPlugin implements Plugin<Project> {
                 t.getPullPolicy().set(spec.getPullPolicy());
 
                 // Lazy auto-dependsOn for referenced volumes and networks.
-                t.dependsOn(project.provider(() -> {
+                org.gradle.api.provider.Provider<List<String>> autoDeps = project.provider(() -> {
                     List<String> deps = new ArrayList<>();
                     for (var vm : spec.getMounts().volumes()) {
                         deps.add(Names.createVolumeTask(vm.volumeName()));
@@ -88,7 +88,8 @@ public class DockerPlugin implements Plugin<Project> {
                         deps.add(Names.createNetworkTask(n));
                     }
                     return deps;
-                }));
+                });
+                t.dependsOn(autoDeps);
             });
 
             project.getTasks().register(Names.stopTask(spec.getName()), StopContainerTask.class, t -> {

@@ -11,9 +11,7 @@ import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public final class Readiness {
 
     private Readiness() {}
@@ -59,7 +57,7 @@ public final class Readiness {
                         try {
                             close();
                         } catch (Exception ignored) {
-                            log.debug("Ignoring exception", ignored);
+                            // best-effort close after match; drop is intentional
                         }
                         return;
                     }
