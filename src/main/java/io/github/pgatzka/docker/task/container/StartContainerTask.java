@@ -90,21 +90,23 @@ public abstract class StartContainerTask extends DockerTask {
             // create
         }
         log.info("Creating container {}", p.containerName);
-        CreateContainerCmd create = c.createContainerCmd(p.image).withName(p.containerName);
-        if (!p.env.isEmpty()) {
-            create.withEnv(p.env.entrySet().stream()
-                    .map(e -> e.getKey() + "=" + e.getValue())
-                    .toList());
+        String id;
+        try (CreateContainerCmd create = c.createContainerCmd(p.image).withName(p.containerName)) {
+            if (!p.env.isEmpty()) {
+                create.withEnv(p.env.entrySet().stream()
+                        .map(e -> e.getKey() + "=" + e.getValue())
+                        .toList());
+            }
+            if (!p.command.isEmpty()) {
+                create.withCmd(p.command);
+            }
+            applyPorts(create, p.ports);
+            applyMounts(create, p.volumeMounts, p.bindMounts);
+            if (!p.networks.isEmpty()) {
+                create.getHostConfig().withNetworkMode(p.networks.get(0));
+            }
+            id = create.exec().getId();
         }
-        if (!p.command.isEmpty()) {
-            create.withCmd(p.command);
-        }
-        applyPorts(create, p.ports);
-        applyMounts(create, p.volumeMounts, p.bindMounts);
-        if (!p.networks.isEmpty()) {
-            create.getHostConfig().withNetworkMode(p.networks.get(0));
-        }
-        String id = create.exec().getId();
         // attach additional networks (beyond the first / "default")
         for (int i = 1; i < p.networks.size(); i++) {
             c.connectToNetworkCmd()

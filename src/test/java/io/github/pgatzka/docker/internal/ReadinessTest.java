@@ -1,6 +1,7 @@
 package io.github.pgatzka.docker.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -30,7 +31,8 @@ class ReadinessTest {
         when(state.getHealth()).thenReturn(health);
         when(health.getStatus()).thenReturn("healthy");
 
-        Readiness.healthcheck(c, "cid", Duration.ofSeconds(1), Duration.ofMillis(10));
+        assertThatNoException()
+                .isThrownBy(() -> Readiness.healthcheck(c, "cid", Duration.ofSeconds(1), Duration.ofMillis(10)));
     }
 
     @Test
@@ -56,7 +58,9 @@ class ReadinessTest {
     void tcpPortReturnsWhenSocketAccepts() throws IOException {
         try (ServerSocket s = new ServerSocket(0)) {
             int port = s.getLocalPort();
-            Readiness.tcpPort("127.0.0.1", port, Duration.ofSeconds(1), Duration.ofMillis(10));
+            assertThatNoException()
+                    .isThrownBy(
+                            () -> Readiness.tcpPort("127.0.0.1", port, Duration.ofSeconds(1), Duration.ofMillis(10)));
         }
     }
 
