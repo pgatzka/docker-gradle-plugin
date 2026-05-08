@@ -1,6 +1,8 @@
 package io.github.pgatzka.docker.dsl;
 
-public sealed interface WaitFor
+import java.io.Serializable;
+
+public sealed interface WaitFor extends Serializable
         permits WaitFor.Healthcheck, WaitFor.LogLine, WaitFor.TcpPort, WaitFor.None {
 
     record Healthcheck() implements WaitFor {}
