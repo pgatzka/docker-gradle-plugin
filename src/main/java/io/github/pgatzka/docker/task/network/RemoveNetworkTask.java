@@ -10,6 +10,11 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.UntrackedTask;
 
+/**
+ * Removes a Docker network by name.
+ * <p>Idempotent: a no-op when the network is absent. Marked {@link UntrackedTask} because the
+ * daemon side effect must always run.
+ */
 @UntrackedTask(because = "Docker daemon side effects must always run")
 public abstract class RemoveNetworkTask extends DockerTask {
 
@@ -26,9 +31,18 @@ public abstract class RemoveNetworkTask extends DockerTask {
         log.info("Removed network {}", networkName);
     }
 
+    /**
+     * Mirrors {@code NetworkSpec.name}: the network name to remove.
+     *
+     * @return the network name property
+     */
     @Input
     public abstract Property<String> getNetworkName();
 
+    /**
+     * Gradle entry point for this task. Delegates to the package-private
+     * {@link #run(DockerClient, String, Logger)} helper.
+     */
     @TaskAction
     public void execute() {
         run(getDockerService().get().getClient(), getNetworkName().get(), getLogger());

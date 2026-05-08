@@ -15,10 +15,26 @@ import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+/**
+ * Container readiness probes used by start tasks. Each probe blocks the calling thread until the
+ * desired condition is met or {@code timeout} elapses, in which case a {@link NotReadyException}
+ * is thrown. Stateless utility — instances are not constructible.
+ */
 public final class Readiness {
 
     private Readiness() {}
 
+    /**
+     * Poll the daemon's healthcheck status for {@code containerId} until it reports
+     * {@code healthy} or {@code timeout} elapses.
+     *
+     * @param client the docker-java client used to inspect the container
+     * @param containerId the daemon-side container id (or name)
+     * @param timeout maximum time to wait for the {@code healthy} status
+     * @param pollInterval delay between successive inspect calls
+     * @throws NotReadyException if the container disappears, is interrupted, or never becomes
+     *     healthy within {@code timeout}
+     */
     public static void healthcheck(DockerClient client, String containerId, Duration timeout, Duration pollInterval) {
         Instant deadline = Instant.now().plus(timeout);
         while (Instant.now().isBefore(deadline)) {
@@ -40,6 +56,18 @@ public final class Readiness {
         throw new NotReadyException("Container " + containerId + " not healthy within " + timeout);
     }
 
+    /**
+     * Repeatedly attempt a TCP connection to {@code host:port} until one succeeds or
+     * {@code timeout} elapses. Each connection attempt uses {@code pollInterval} as its socket
+     * connect timeout, and the loop also sleeps {@code pollInterval} between attempts.
+     *
+     * @param host the host to connect to (typically {@code localhost} for published ports)
+     * @param port the TCP port to probe
+     * @param timeout maximum total time to wait for a successful connection
+     * @param pollInterval per-attempt connect timeout and delay between attempts
+     * @throws NotReadyException if no connection succeeds within {@code timeout} or the thread
+     *     is interrupted while waiting
+     */
     public static void tcpPort(String host, int port, Duration timeout, Duration pollInterval) {
         Instant deadline = Instant.now().plus(timeout);
         while (Instant.now().isBefore(deadline)) {
@@ -59,6 +87,18 @@ public final class Readiness {
         throw new NotReadyException("TCP " + host + ":" + port + " not reachable within " + timeout);
     }
 
+    /**
+     * Stream the container's combined stdout/stderr logs until a line matches {@code regex} or
+     * {@code timeout} elapses. Partial frames are buffered so a match split across docker log
+     * frames is still detected.
+     *
+     * @param client the docker-java client used to follow the log stream
+     * @param containerId the daemon-side container id (or name)
+     * @param regex Java regular expression matched against each complete log line
+     * @param timeout maximum time to wait for a matching line
+     * @throws NotReadyException if no matching line is observed within {@code timeout}, the
+     *     stream is interrupted, or it closes before a match is seen
+     */
     public static void logLine(DockerClient client, String containerId, String regex, Duration timeout) {
         Pattern pattern = Pattern.compile(regex);
         // Buffer partial lines across frames: docker log frames are not guaranteed to be line-aligned.
@@ -95,7 +135,14 @@ public final class Readiness {
         }
     }
 
-    /** Pure-logic helper used by unit tests. */
+    /**
+     * Pure-logic helper used by unit tests: returns whether any line in {@code text} matches
+     * {@code regex}. Does not read from a docker daemon.
+     *
+     * @param text multi-line text, lines separated by {@code \n} or {@code \r\n}
+     * @param regex Java regular expression matched against each line
+     * @return {@code true} if at least one line contains a match for {@code regex}
+     */
     public static boolean logLineMatch(String text, String regex) {
         Pattern pattern = Pattern.compile(regex);
         for (String line : text.split("\\r?\\n")) {

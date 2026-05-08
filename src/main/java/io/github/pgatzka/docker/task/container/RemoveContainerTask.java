@@ -9,6 +9,12 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.UntrackedTask;
 
+/**
+ * Force-removes a Docker container by name. Anonymous volumes attached to the container are
+ * preserved; only the container itself is deleted.
+ * <p>Idempotent: a no-op when the container is absent. Marked {@link UntrackedTask} because
+ * the daemon side effect must always run.
+ */
 @UntrackedTask(because = "Docker daemon side effects must always run")
 public abstract class RemoveContainerTask extends DockerTask {
 
@@ -27,9 +33,18 @@ public abstract class RemoveContainerTask extends DockerTask {
         log.info("Removed container {}", containerName);
     }
 
+    /**
+     * Mirrors {@code ContainerSpec.name}: the container name to remove.
+     *
+     * @return the container name property
+     */
     @Input
     public abstract Property<String> getContainerName();
 
+    /**
+     * Gradle entry point for this task. Delegates to the package-private
+     * {@link #run(DockerClient, String, Logger)} helper.
+     */
     @TaskAction
     public void execute() {
         run(getDockerService().get().getClient(), getContainerName().get(), getLogger());

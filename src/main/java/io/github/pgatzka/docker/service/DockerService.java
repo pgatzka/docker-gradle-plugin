@@ -13,6 +13,12 @@ import org.gradle.api.logging.Logging;
 import org.gradle.api.services.BuildService;
 import org.gradle.api.services.BuildServiceParameters;
 
+/**
+ * Gradle {@link BuildService} that owns a single {@link DockerClient} for the whole build. The
+ * first call to {@link #getClient()} constructs the client lazily and pings the daemon (the
+ * precheck runs at most once per service instance). Implements {@link AutoCloseable} so Gradle
+ * closes the underlying HTTP client at build end.
+ */
 public abstract class DockerService implements BuildService<BuildServiceParameters.None>, AutoCloseable {
 
     private static final Logger LOG = Logging.getLogger(DockerService.class);
@@ -34,6 +40,13 @@ public abstract class DockerService implements BuildService<BuildServiceParamete
         }
     }
 
+    /**
+     * Lazily construct the shared {@link DockerClient} on first call and verify the daemon is
+     * reachable; subsequent calls return the cached client without re-pinging.
+     *
+     * @return the shared {@link DockerClient} after a successful daemon precheck
+     * @throws GradleException if the daemon is unreachable on the first call
+     */
     public DockerClient getClient() {
         DockerClient c = ensureClient();
         ensurePrechecked(c);
@@ -73,6 +86,12 @@ public abstract class DockerService implements BuildService<BuildServiceParamete
         }
     }
 
+    /**
+     * Close the underlying {@link DockerClient}, if any, and reset internal state so the
+     * service can be reused. Called by Gradle at the end of the build.
+     *
+     * @throws IOException if the underlying client's close fails
+     */
     @Override
     public void close() throws IOException {
         synchronized (clientLock) {

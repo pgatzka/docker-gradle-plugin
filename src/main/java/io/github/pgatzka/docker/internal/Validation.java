@@ -11,10 +11,24 @@ import java.util.Map;
 import java.util.Set;
 import org.gradle.api.GradleException;
 
+/**
+ * Cross-reference and shape validation for the {@code docker {}} extension. Run from
+ * {@link io.github.pgatzka.docker.DockerPlugin#apply(org.gradle.api.Project)} via
+ * {@code project.afterEvaluate(...)} so all containers, volumes, and networks have been
+ * registered before checks run.
+ */
 public final class Validation {
 
     private Validation() {}
 
+    /**
+     * Validate the configured Docker extension after evaluation.
+     *
+     * @param extension the configured Docker extension
+     * @throws GradleException if a container declares no image, has duplicate mount targets,
+     *     references an undeclared volume or network, or collides with another container on
+     *     daemon-side container name or published host port
+     */
     public static void validate(DockerExtension extension) {
         Set<String> declaredVolumes = new HashSet<>();
         extension.getVolumes().forEach(volume -> declaredVolumes.add(volume.getName()));
