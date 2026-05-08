@@ -15,6 +15,9 @@ public class Mounts {
 
     private final List<BindMount> binds = new ArrayList<>();
 
+    /** Default constructor for use by {@code ContainerSpec}; not intended for direct use. */
+    public Mounts() {}
+
     /**
      * Register a read-write named-volume mount.
      *
@@ -57,12 +60,20 @@ public class Mounts {
         binds.add(new BindMount(hostPath, containerPath, readOnly));
     }
 
-    /** @return an immutable snapshot of currently-registered volume mounts. */
+    /**
+     * Snapshot the registered volume mounts.
+     *
+     * @return an immutable snapshot of currently-registered volume mounts
+     */
     public List<VolumeMount> volumes() {
         return List.copyOf(volumes);
     }
 
-    /** @return an immutable snapshot of currently-registered bind mounts. */
+    /**
+     * Snapshot the registered bind mounts.
+     *
+     * @return an immutable snapshot of currently-registered bind mounts
+     */
     public List<BindMount> binds() {
         return List.copyOf(binds);
     }

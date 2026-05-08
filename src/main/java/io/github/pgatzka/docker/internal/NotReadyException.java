@@ -8,6 +8,8 @@ package io.github.pgatzka.docker.internal;
 public final class NotReadyException extends RuntimeException {
 
     /**
+     * Construct a new exception describing why readiness was not reached.
+     *
      * @param msg human-readable description of the unmet readiness condition
      */
     public NotReadyException(String msg) {

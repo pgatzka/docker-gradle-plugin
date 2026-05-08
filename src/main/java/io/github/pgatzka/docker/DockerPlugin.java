@@ -33,6 +33,9 @@ public class DockerPlugin implements Plugin<Project> {
     /** Plugin id used to scope the shared {@link DockerService} so it can't collide with other plugins. */
     static final String DOCKER_SERVICE_NAME = "io.github.pgatzka.docker.DockerService";
 
+    /** Public no-arg constructor invoked by Gradle when applying the plugin. */
+    public DockerPlugin() {}
+
     /**
      * Apply the plugin to {@code project}: install the {@code docker} extension, register the
      * shared {@link DockerService}, and register tasks for each declared container, volume,

@@ -29,6 +29,9 @@ public abstract class DockerService implements BuildService<BuildServiceParamete
     private DockerClient client;
     private volatile boolean prechecked;
 
+    /** Invoked by Gradle's bytecode-decorated subclass; not for direct use. */
+    public DockerService() {}
+
     static String precheck(DockerClient client) {
         try {
             client.pingCmd().exec();

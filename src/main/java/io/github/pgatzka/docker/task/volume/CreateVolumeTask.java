@@ -12,13 +12,16 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.UntrackedTask;
 
 /**
- * Creates a Docker named volume according to its {@link io.github.pgatzka.docker.dsl.VolumeSpec}.
+ * Creates a Docker named volume according to its {@link io.github.pgatzka.docker.dsl.spec.VolumeSpec}.
  * <p>Idempotent: a no-op when a volume with the same name already exists (driver and options
  * are not reconciled). Marked {@link UntrackedTask} because the daemon side effect must always
  * run.
  */
 @UntrackedTask(because = "Docker daemon side effects must always run")
 public abstract class CreateVolumeTask extends DockerTask {
+
+    /** Invoked by Gradle's bytecode-decorated subclass; not for direct use. */
+    public CreateVolumeTask() {}
 
     static void run(
             DockerClient client,
