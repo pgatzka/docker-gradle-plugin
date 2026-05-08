@@ -24,3 +24,10 @@ docker {
         }
     }
 }
+
+tasks {
+    register("codegen"){
+        dependsOn("startPostgresCodegen")
+        finalizedBy("stopPostgresCodegen")
+    }
+}
