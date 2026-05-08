@@ -100,7 +100,6 @@ tasks {
         }
     }
     jacocoTestReport {
-        dependsOn(test)
         reports {
             xml.required.set(true)
             html.required.set(true)
@@ -114,6 +113,9 @@ tasks {
         dependsOn(testing.suites.named("functionalTest"))
     }
     test {
+        finalizedBy(jacocoTestReport)
+    }
+    named("functionalTest") {
         finalizedBy(jacocoTestReport)
     }
 }
