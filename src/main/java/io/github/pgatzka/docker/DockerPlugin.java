@@ -8,8 +8,11 @@ import io.github.pgatzka.docker.internal.Names;
 import io.github.pgatzka.docker.service.DockerService;
 import io.github.pgatzka.docker.task.CreateNetworkTask;
 import io.github.pgatzka.docker.task.CreateVolumeTask;
+import io.github.pgatzka.docker.task.RemoveContainerTask;
 import io.github.pgatzka.docker.task.RemoveNetworkTask;
 import io.github.pgatzka.docker.task.RemoveVolumeTask;
+import io.github.pgatzka.docker.task.StartContainerTask;
+import io.github.pgatzka.docker.task.StopContainerTask;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
@@ -52,6 +55,42 @@ public class DockerPlugin implements Plugin<Project> {
             });
             project.getTasks().register(Names.removeNetworkTask(spec.getName()), RemoveNetworkTask.class, t -> {
                 t.getNetworkName().set(spec.getName());
+            });
+        });
+
+        ext.getContainers().all(spec -> {
+            project.getTasks().register(Names.startTask(spec.getName()), StartContainerTask.class, t -> {
+                t.getContainerName().set(spec.getContainerName());
+                t.getImage().set(spec.getImage());
+                t.getEnvironment().set(spec.getEnvironment());
+                t.getPorts().set(spec.getPorts());
+                t.getNetworks().set(spec.getNetworks());
+                t.getCommand().set(spec.getCommand());
+                t.getVolumeMounts().set(project.provider(() -> spec.getMounts().volumes()));
+                t.getBindMounts().set(project.provider(() -> spec.getMounts().binds()));
+                t.getWaitFor().set(spec.getWaitFor());
+                t.getWaitTimeout().set(spec.getWaitTimeout());
+                t.getPullPolicy().set(spec.getPullPolicy());
+
+                // Lazy auto-dependsOn for referenced volumes and networks.
+                t.dependsOn(project.provider(() -> {
+                    java.util.List<String> deps = new java.util.ArrayList<>();
+                    for (var vm : spec.getMounts().volumes()) {
+                        deps.add(Names.createVolumeTask(vm.volumeName()));
+                    }
+                    for (String n : spec.getNetworks().getOrElse(java.util.List.of())) {
+                        deps.add(Names.createNetworkTask(n));
+                    }
+                    return deps;
+                }));
+            });
+
+            project.getTasks().register(Names.stopTask(spec.getName()), StopContainerTask.class, t -> {
+                t.getContainerName().set(spec.getContainerName());
+                t.getStopTimeout().set(spec.getStopTimeout());
+            });
+            project.getTasks().register(Names.removeContainerTask(spec.getName()), RemoveContainerTask.class, t -> {
+                t.getContainerName().set(spec.getContainerName());
             });
         });
     }
