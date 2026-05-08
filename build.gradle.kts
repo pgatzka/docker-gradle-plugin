@@ -154,5 +154,10 @@ release {
     git {
         requireBranch = "main"
     }
-    buildTasks = listOf("build", "publish", "publishPlugins", "sonar")
+    // Order matters: anything that doesn't side-effect a registry runs first (build, sonar),
+    // then the auth-sensitive plugin portal publish (most common failure mode), then the
+    // GitHub Packages publish. A failure earlier in the list short-circuits the rest, so
+    // the worst case is a failed Plugin Portal publish — Packages stays clean. The release
+    // plugin only creates a tag AFTER all of these succeed.
+    buildTasks = listOf("build", "sonar", "publishPlugins", "publish")
 }

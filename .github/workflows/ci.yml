@@ -146,7 +146,10 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       run-tests
-    if: github.ref == 'refs/heads/main'
+    # Only on push to main. Explicitly require the push event so PR runs
+    # (event_name=pull_request) cannot reach this job even if the head ref
+    # somehow looked like main.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
       contents: read
       packages: write
