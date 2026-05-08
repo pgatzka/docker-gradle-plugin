@@ -122,6 +122,11 @@ tasks {
     named("functionalTest") {
         finalizedBy(jacocoTestReport)
     }
+    withType<Test>().configureEach {
+        // Silence "Sharing is only supported for boot loader classes..." emitted by every
+        // test-JVM launch when an agent (e.g. JaCoCo) appends to the bootstrap classpath.
+        jvmArgs("-Xshare:off")
+    }
 }
 
 gradlePlugin {
