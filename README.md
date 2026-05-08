@@ -34,11 +34,11 @@ docker {
 
 ## Generated tasks (group `docker`)
 
-| Resource | Tasks |
-|---|---|
+| Resource                          | Tasks                                             |
+|-----------------------------------|---------------------------------------------------|
 | `containers.register("postgres")` | `startPostgres`, `stopPostgres`, `removePostgres` |
-| `volumes.register("pgdata")`      | `createPgdata`, `removePgdata` |
-| `networks.register("backend")`    | `createBackend`, `removeBackend` |
+| `volumes.register("pgdata")`      | `createPgdata`, `removePgdata`                    |
+| `networks.register("backend")`    | `createBackend`, `removeBackend`                  |
 
 `startPostgres` automatically `dependsOn` `createPgdata` and `createBackend`.
 
@@ -60,6 +60,7 @@ tasks.named("flywayMigrate") {
 
 ## Notes
 
-- Container/volume/network names are used verbatim on the daemon. Two Gradle projects on one machine declaring the same name will collide; use distinct names or override `containerName`.
+- Container/volume/network names are used verbatim on the daemon. Two Gradle projects on one machine declaring the same
+  name will collide; use distinct names or override `containerName`.
 - All output is at `info`/`debug` level. Run with `--info` to see phase transitions.
 - Daemon connection is read from environment (`DOCKER_HOST`, `DOCKER_TLS_VERIFY`, `DOCKER_CERT_PATH`).

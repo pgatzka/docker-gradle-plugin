@@ -13,47 +13,49 @@ import org.gradle.api.services.BuildService;
 import org.gradle.api.services.BuildServiceParameters;
 
 public abstract class DockerService
-        implements BuildService<BuildServiceParameters.None>, AutoCloseable {
+    implements BuildService<BuildServiceParameters.None>, AutoCloseable {
 
-    private static final Logger LOG = Logging.getLogger(DockerService.class);
+  private static final Logger LOG = Logging.getLogger(DockerService.class);
 
-    private DockerClient client;
-    private boolean prechecked;
+  private DockerClient client;
 
-    public synchronized DockerClient getClient() {
-        if (client == null) {
-            var cfg = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
-            DockerHttpClient http = new ApacheDockerHttpClient.Builder()
-                .dockerHost(cfg.getDockerHost())
-                .sslConfig(cfg.getSSLConfig())
-                .build();
-            client = DockerClientImpl.getInstance(cfg, http);
-            LOG.info("Connecting to Docker daemon at {}", cfg.getDockerHost());
-        }
-        if (!prechecked) {
-            String version = precheck(client);
-            LOG.info("Daemon reachable: {}", version);
-            prechecked = true;
-        }
-        return client;
+  private boolean prechecked;
+
+  public synchronized DockerClient getClient() {
+    if (client == null) {
+      var cfg = DefaultDockerClientConfig.createDefaultConfigBuilder().build();
+      DockerHttpClient http = new ApacheDockerHttpClient.Builder()
+          .dockerHost(cfg.getDockerHost())
+          .sslConfig(cfg.getSSLConfig())
+          .build();
+      client = DockerClientImpl.getInstance(cfg, http);
+      LOG.info("Connecting to Docker daemon at {}", cfg.getDockerHost());
     }
-
-    static String precheck(DockerClient c) {
-        try {
-            c.pingCmd().exec();
-            Version v = c.versionCmd().exec();
-            return v.getVersion();
-        } catch (RuntimeException ex) {
-            throw new GradleException(
-                "Docker daemon unreachable: " + ex.getMessage() + ". Is Docker running?", ex);
-        }
+    if (!prechecked) {
+      String version = precheck(client);
+      LOG.info("Daemon reachable: {}", version);
+      prechecked = true;
     }
+    return client;
+  }
 
-    @Override
-    public synchronized void close() throws Exception {
-        if (client != null) {
-            client.close();
-            client = null;
-        }
+  static String precheck(DockerClient c) {
+    try {
+      c.pingCmd().exec();
+      Version v = c.versionCmd().exec();
+      return v.getVersion();
+    } catch (RuntimeException ex) {
+      throw new GradleException(
+          "Docker daemon unreachable: " + ex.getMessage() + ". Is Docker running?", ex);
     }
+  }
+
+  @Override
+  public synchronized void close() throws Exception {
+    if (client != null) {
+      client.close();
+      client = null;
+    }
+  }
+
 }
