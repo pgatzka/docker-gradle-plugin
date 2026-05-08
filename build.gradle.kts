@@ -15,6 +15,10 @@ repositories {
     mavenCentral()
 }
 
+dependencyLocking {
+    lockAllConfigurations()
+}
+
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(21))

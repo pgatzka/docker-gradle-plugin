@@ -38,7 +38,7 @@ public abstract class StartContainerTask extends DockerTask {
 
         EnsureResult er = ensureCreated(c, p, log);
         startIfNotRunning(c, p, er, log);
-        waitReady(c, p, er.id, log);
+        waitReady(c, p, log);
     }
 
     private static void pullIfNeeded(DockerClient c, String image, PullPolicy policy, Logger log) {
@@ -166,7 +166,7 @@ public abstract class StartContainerTask extends DockerTask {
         log.info("Container {} running", p.containerName);
     }
 
-    private static void waitReady(DockerClient c, Params p, String id, Logger log) {
+    private static void waitReady(DockerClient c, Params p, Logger log) {
         Duration poll = Duration.ofMillis(500);
         log.info(
                 "Waiting for readiness (strategy={}, timeout={})",
@@ -177,15 +177,15 @@ public abstract class StartContainerTask extends DockerTask {
                 /* no wait */
             }
             case WaitFor.Healthcheck ignored -> Readiness.healthcheck(c, p.containerName, p.waitTimeout, poll);
-            case WaitFor.TcpPort tp -> {
+            case WaitFor.TcpPort(int port) -> {
                 int hostPort = p.ports.entrySet().stream()
-                        .filter(e -> e.getValue() == tp.port())
+                        .filter(e -> e.getValue() == port)
                         .map(Map.Entry::getKey)
                         .findFirst()
-                        .orElse(tp.port());
+                        .orElse(port);
                 Readiness.tcpPort("127.0.0.1", hostPort, p.waitTimeout, poll);
             }
-            case WaitFor.LogLine ll -> Readiness.logLine(c, p.containerName, ll.regex(), p.waitTimeout);
+            case WaitFor.LogLine(String regex) -> Readiness.logLine(c, p.containerName, regex, p.waitTimeout);
         }
         log.info("Ready");
     }

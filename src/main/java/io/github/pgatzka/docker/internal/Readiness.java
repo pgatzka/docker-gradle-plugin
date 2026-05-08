@@ -1,9 +1,9 @@
 package io.github.pgatzka.docker.internal;
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.model.Frame;
-import com.github.dockerjava.core.command.LogContainerResultCallback;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.time.Duration;
@@ -49,7 +49,7 @@ public final class Readiness {
     public static void logLine(DockerClient c, String containerId, String regex, Duration timeout) {
         Pattern pattern = Pattern.compile(regex);
         AtomicBoolean matched = new AtomicBoolean(false);
-        var callback = new LogContainerResultCallback() {
+        var callback = new ResultCallback.Adapter<Frame>() {
             @Override
             public void onNext(Frame frame) {
                 String s = new String(frame.getPayload());
