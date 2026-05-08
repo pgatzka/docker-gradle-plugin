@@ -26,12 +26,12 @@ class ContainerTaskGenerationTest {
 
         Task start = project.getTasks().getByName("startPostgres");
         assertThat(project.getTasks().findByName("stopPostgres")).isNotNull();
-        assertThat(project.getTasks().findByName("removePostgres")).isNotNull();
+        assertThat(project.getTasks().findByName("removeContainerPostgres")).isNotNull();
 
         var depNames = start.getTaskDependencies().getDependencies(start).stream()
                 .map(Task::getName)
                 .toList();
-        assertThat(depNames).contains("createData", "createBackend");
+        assertThat(depNames).contains("createVolumeData", "createNetworkBackend");
     }
 
     @Test
@@ -53,6 +53,6 @@ class ContainerTaskGenerationTest {
         var depNames = start.getTaskDependencies().getDependencies(start).stream()
                 .map(Task::getName)
                 .toList();
-        assertThat(depNames).contains("createData", "createBackend");
+        assertThat(depNames).contains("createVolumeData", "createNetworkBackend");
     }
 }

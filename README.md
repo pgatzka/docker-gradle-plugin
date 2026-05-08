@@ -34,13 +34,15 @@ docker {
 
 ## Generated tasks (group `docker`)
 
-| Resource                          | Tasks                                             |
-|-----------------------------------|---------------------------------------------------|
-| `containers.register("postgres")` | `startPostgres`, `stopPostgres`, `removePostgres` |
-| `volumes.register("pgdata")`      | `createPgdata`, `removePgdata`                    |
-| `networks.register("backend")`    | `createBackend`, `removeBackend`                  |
+| Resource                          | Tasks                                                              |
+|-----------------------------------|--------------------------------------------------------------------|
+| `containers.register("postgres")` | `startPostgres`, `stopPostgres`, `removeContainerPostgres`         |
+| `volumes.register("pgdata")`      | `createVolumePgdata`, `removeVolumePgdata`                         |
+| `networks.register("backend")`    | `createNetworkBackend`, `removeNetworkBackend`                     |
 
-`startPostgres` automatically `dependsOn` `createPgdata` and `createBackend`.
+`startPostgres` automatically `dependsOn` `createVolumePgdata` and `createNetworkBackend`.
+
+Spec names containing `_` or `-` are camel-cased in task names: `postgres_codegen` → `startPostgresCodegen`. The `Container` / `Volume` / `Network` infix on `create…` and `remove…` disambiguates resources that share a logical name (e.g. `containers.register("postgres")` and `volumes.register("postgres")` produce `removeContainerPostgres` vs `removeVolumePostgres`).
 
 ## Wiring tasks
 

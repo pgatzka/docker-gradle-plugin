@@ -21,7 +21,7 @@ class ContainerSpecTest {
         assertThat(spec.getPorts().get()).isEmpty();
         assertThat(spec.getNetworks().get()).isEmpty();
         assertThat(spec.getCommand().get()).isEmpty();
-        assertThat(spec.getWaitFor().get()).isInstanceOf(WaitFor.Healthcheck.class);
+        assertThat(spec.getWaitFor().get()).isInstanceOf(WaitFor.None.class);
         assertThat(spec.getWaitTimeout().get()).isEqualTo(Duration.ofSeconds(60));
         assertThat(spec.getStopTimeout().get()).isEqualTo(Duration.ofSeconds(10));
         assertThat(spec.getPullPolicy().get()).isEqualTo(PullPolicy.IF_NOT_PRESENT);

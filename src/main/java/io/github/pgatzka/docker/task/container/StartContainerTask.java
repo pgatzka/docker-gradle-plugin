@@ -7,11 +7,13 @@ import com.github.dockerjava.api.command.InspectImageResponse;
 import com.github.dockerjava.api.command.PullImageResultCallback;
 import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.api.model.*;
+import com.github.dockerjava.core.DefaultDockerClientConfig;
 import io.github.pgatzka.docker.dsl.Mounts;
 import io.github.pgatzka.docker.dsl.PullPolicy;
 import io.github.pgatzka.docker.dsl.WaitFor;
 import io.github.pgatzka.docker.internal.Readiness;
 import io.github.pgatzka.docker.task.DockerTask;
+import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,15 +28,27 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.work.DisableCachingByDefault;
+import org.gradle.api.tasks.UntrackedTask;
 
-@DisableCachingByDefault(because = "Docker daemon side effects must always run")
+@UntrackedTask(because = "Docker daemon side effects must always run")
 public abstract class StartContainerTask extends DockerTask {
 
     static void run(DockerClient c, Params p, Logger log) {
         pullIfNeeded(c, p.image, p.pullPolicy, log);
-        InspectImageResponse imgInspect = c.inspectImageCmd(p.image).exec();
-        validateHealthcheck(p, imgInspect);
+        if (p.waitFor instanceof WaitFor.Healthcheck) {
+            // Inspecting the image is only needed to validate that a HEALTHCHECK is declared
+            // when the user opted into the healthcheck readiness strategy.
+            InspectImageResponse imgInspect;
+            try {
+                imgInspect = c.inspectImageCmd(p.image).exec();
+            } catch (NotFoundException nf) {
+                throw new GradleException(
+                        "Image " + p.image + " is not present locally and pullPolicy=" + p.pullPolicy
+                                + " did not pull it.",
+                        nf);
+            }
+            validateHealthcheck(p, imgInspect);
+        }
 
         EnsureResult er = ensureCreated(c, p, log);
         startIfNotRunning(c, p, er, log);
@@ -56,17 +70,21 @@ public abstract class StartContainerTask extends DockerTask {
             return;
         }
         log.info("Pulling {} (policy={})", image, policy);
-        try {
-            c.pullImageCmd(image).exec(new PullImageResultCallback()).awaitCompletion(5, TimeUnit.MINUTES);
+        try (PullImageResultCallback cb = c.pullImageCmd(image).exec(new PullImageResultCallback())) {
+            boolean completed = cb.awaitCompletion(5, TimeUnit.MINUTES);
+            if (!completed) {
+                throw new GradleException("Pull of " + image + " did not complete within 5 minutes.");
+            }
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
             throw new GradleException("Interrupted while pulling " + image, ie);
+        } catch (java.io.IOException io) {
+            throw new GradleException("Failed to close pull stream for " + image + ": " + io.getMessage(), io);
         }
         log.info("Pull complete: {}", image);
     }
 
     private static void validateHealthcheck(Params p, InspectImageResponse imgInspect) {
-        if (!(p.waitFor instanceof WaitFor.Healthcheck)) return;
         ContainerConfig cfg = imgInspect.getConfig();
         HealthCheck hc = cfg == null ? null : cfg.getHealthcheck();
         boolean none = hc == null
@@ -103,7 +121,7 @@ public abstract class StartContainerTask extends DockerTask {
             applyPorts(create, p.ports);
             applyMounts(create, p.volumeMounts, p.bindMounts);
             if (!p.networks.isEmpty()) {
-                create.getHostConfig().withNetworkMode(p.networks.get(0));
+                hostConfig(create).withNetworkMode(p.networks.get(0));
             }
             id = create.exec().getId();
         }
@@ -118,6 +136,17 @@ public abstract class StartContainerTask extends DockerTask {
         return new EnsureResult(id, true);
     }
 
+    private static HostConfig hostConfig(CreateContainerCmd cmd) {
+        HostConfig hc = cmd.getHostConfig();
+        if (hc == null) {
+            // docker-java initializes this in practice, but guard against null defensively.
+            HostConfig fresh = HostConfig.newHostConfig();
+            cmd.withHostConfig(fresh);
+            return fresh;
+        }
+        return hc;
+    }
+
     private static void applyPorts(CreateContainerCmd cmd, Map<Integer, Integer> ports) {
         if (ports.isEmpty()) return;
         List<ExposedPort> exposed = new ArrayList<>();
@@ -128,7 +157,7 @@ public abstract class StartContainerTask extends DockerTask {
             bindings.bind(ep, Ports.Binding.bindPort(host));
         });
         cmd.withExposedPorts(exposed);
-        cmd.getHostConfig().withPortBindings(bindings);
+        hostConfig(cmd).withPortBindings(bindings);
     }
 
     private static void applyMounts(
@@ -143,7 +172,7 @@ public abstract class StartContainerTask extends DockerTask {
                     v.volumeName(), new Volume(v.containerPath()), v.readOnly() ? AccessMode.ro : AccessMode.rw));
         }
         if (!binds.isEmpty()) {
-            cmd.getHostConfig().withBinds(binds);
+            hostConfig(cmd).withBinds(binds);
         }
     }
 
@@ -178,16 +207,40 @@ public abstract class StartContainerTask extends DockerTask {
             }
             case WaitFor.Healthcheck ignored -> Readiness.healthcheck(c, p.containerName, p.waitTimeout, poll);
             case WaitFor.TcpPort(int port) -> {
-                int hostPort = p.ports.entrySet().stream()
+                Integer hostPort = p.ports.entrySet().stream()
                         .filter(e -> e.getValue() == port)
                         .map(Map.Entry::getKey)
                         .findFirst()
-                        .orElse(port);
-                Readiness.tcpPort("127.0.0.1", hostPort, p.waitTimeout, poll);
+                        .orElse(null);
+                if (hostPort == null) {
+                    throw new GradleException("Container " + p.containerName
+                            + " uses waitFor.tcpPort(" + port + ") but no host port is mapped to container port "
+                            + port + "; add it to ports{} or use a port that appears as a value in the map.");
+                }
+                Readiness.tcpPort(daemonHost(), hostPort, p.waitTimeout, poll);
             }
             case WaitFor.LogLine(String regex) -> Readiness.logLine(c, p.containerName, regex, p.waitTimeout);
         }
         log.info("Ready");
+    }
+
+    /** Resolve the host where published container ports are reachable from the build machine. */
+    private static String daemonHost() {
+        try {
+            URI uri = DefaultDockerClientConfig.createDefaultConfigBuilder()
+                    .build()
+                    .getDockerHost();
+            String scheme = uri.getScheme();
+            if (scheme != null && (scheme.startsWith("tcp") || scheme.startsWith("http"))) {
+                String host = uri.getHost();
+                if (host != null && !host.isBlank() && !"0.0.0.0".equals(host)) {
+                    return host;
+                }
+            }
+        } catch (RuntimeException ignored) {
+            // fall through to localhost
+        }
+        return "127.0.0.1";
     }
 
     private static String capitalize(String s) {
@@ -200,7 +253,12 @@ public abstract class StartContainerTask extends DockerTask {
     @Input
     public abstract Property<String> getImage();
 
-    @Input
+    /**
+     * Container environment values. Marked {@code @Internal} on purpose: env values commonly
+     * carry secrets and we do not want them fingerprinted into Gradle's task input snapshot or
+     * surfaced in build scans / cache snapshots.
+     */
+    @Internal
     public abstract MapProperty<String, String> getEnvironment();
 
     @Input
@@ -212,10 +270,10 @@ public abstract class StartContainerTask extends DockerTask {
     @Input
     public abstract ListProperty<String> getCommand();
 
-    @Internal
+    @Input
     public abstract ListProperty<Mounts.VolumeMount> getVolumeMounts();
 
-    @Internal
+    @Input
     public abstract ListProperty<Mounts.BindMount> getBindMounts();
 
     @Input

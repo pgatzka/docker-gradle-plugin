@@ -17,11 +17,12 @@ class VolumeNetworkTaskGenerationTest {
         ext.getVolumes().register("codegen_data");
         ext.getNetworks().register("codegen_network");
 
-        assertThat(project.getTasks().findByName("createCodegenData")).isNotNull();
-        assertThat(project.getTasks().findByName("removeCodegenData")).isNotNull();
-        assertThat(project.getTasks().findByName("createCodegenNetwork")).isNotNull();
-        assertThat(project.getTasks().findByName("removeCodegenNetwork")).isNotNull();
+        assertThat(project.getTasks().findByName("createVolumeCodegenData")).isNotNull();
+        assertThat(project.getTasks().findByName("removeVolumeCodegenData")).isNotNull();
+        assertThat(project.getTasks().findByName("createNetworkCodegenNetwork")).isNotNull();
+        assertThat(project.getTasks().findByName("removeNetworkCodegenNetwork")).isNotNull();
 
-        assertThat(project.getTasks().getByName("createCodegenData").getGroup()).isEqualTo("docker");
+        assertThat(project.getTasks().getByName("createVolumeCodegenData").getGroup())
+                .isEqualTo("docker");
     }
 }

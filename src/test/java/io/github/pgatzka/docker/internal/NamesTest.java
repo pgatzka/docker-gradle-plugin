@@ -31,11 +31,21 @@ class NamesTest {
     void buildsTaskNames() {
         assertThat(Names.startTask("postgres_codegen")).isEqualTo("startPostgresCodegen");
         assertThat(Names.stopTask("postgres_codegen")).isEqualTo("stopPostgresCodegen");
-        assertThat(Names.removeContainerTask("postgres_codegen")).isEqualTo("removePostgresCodegen");
-        assertThat(Names.createVolumeTask("codegen_data")).isEqualTo("createCodegenData");
-        assertThat(Names.removeVolumeTask("codegen_data")).isEqualTo("removeCodegenData");
-        assertThat(Names.createNetworkTask("codegen_network")).isEqualTo("createCodegenNetwork");
-        assertThat(Names.removeNetworkTask("codegen_network")).isEqualTo("removeCodegenNetwork");
+        assertThat(Names.removeContainerTask("postgres_codegen")).isEqualTo("removeContainerPostgresCodegen");
+        assertThat(Names.createVolumeTask("codegen_data")).isEqualTo("createVolumeCodegenData");
+        assertThat(Names.removeVolumeTask("codegen_data")).isEqualTo("removeVolumeCodegenData");
+        assertThat(Names.createNetworkTask("codegen_network")).isEqualTo("createNetworkCodegenNetwork");
+        assertThat(Names.removeNetworkTask("codegen_network")).isEqualTo("removeNetworkCodegenNetwork");
+    }
+
+    @Test
+    void taskNamesDisambiguateAcrossResourceTypes() {
+        // Container, volume, and network with the same logical name no longer collide.
+        assertThat(Names.removeContainerTask("foo")).isEqualTo("removeContainerFoo");
+        assertThat(Names.removeVolumeTask("foo")).isEqualTo("removeVolumeFoo");
+        assertThat(Names.removeNetworkTask("foo")).isEqualTo("removeNetworkFoo");
+        assertThat(Names.createVolumeTask("foo")).isEqualTo("createVolumeFoo");
+        assertThat(Names.createNetworkTask("foo")).isEqualTo("createNetworkFoo");
     }
 
     @Test

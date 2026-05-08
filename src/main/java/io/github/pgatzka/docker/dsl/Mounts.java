@@ -1,7 +1,6 @@
 package io.github.pgatzka.docker.dsl;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class Mounts {
@@ -26,12 +25,14 @@ public class Mounts {
         binds.add(new BindMount(hostPath, containerPath, readOnly));
     }
 
+    /** @return an immutable snapshot of currently-registered volume mounts. */
     public List<VolumeMount> volumes() {
-        return Collections.unmodifiableList(volumes);
+        return List.copyOf(volumes);
     }
 
+    /** @return an immutable snapshot of currently-registered bind mounts. */
     public List<BindMount> binds() {
-        return Collections.unmodifiableList(binds);
+        return List.copyOf(binds);
     }
 
     public List<String> referencedVolumeNames() {

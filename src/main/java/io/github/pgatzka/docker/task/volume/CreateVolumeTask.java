@@ -9,9 +9,9 @@ import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.work.DisableCachingByDefault;
+import org.gradle.api.tasks.UntrackedTask;
 
-@DisableCachingByDefault(because = "Docker daemon side effects must always run")
+@UntrackedTask(because = "Docker daemon side effects must always run")
 public abstract class CreateVolumeTask extends DockerTask {
 
     static void run(

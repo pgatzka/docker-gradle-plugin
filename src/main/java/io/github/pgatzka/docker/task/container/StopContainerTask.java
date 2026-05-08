@@ -10,9 +10,9 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.work.DisableCachingByDefault;
+import org.gradle.api.tasks.UntrackedTask;
 
-@DisableCachingByDefault(because = "Docker daemon side effects must always run")
+@UntrackedTask(because = "Docker daemon side effects must always run")
 public abstract class StopContainerTask extends DockerTask {
 
     static void run(DockerClient c, String name, Duration timeout, Logger log) {
@@ -27,9 +27,11 @@ public abstract class StopContainerTask extends DockerTask {
             log.info("Container {} already stopped", name);
             return;
         }
-        log.info("Stopping container {} (timeout={}s)", name, timeout.toSeconds());
+        long secs = timeout.toSeconds();
+        int timeoutSecs = secs > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) Math.max(0, secs);
+        log.info("Stopping container {} (timeout={}s)", name, timeoutSecs);
         try {
-            c.stopContainerCmd(name).withTimeout((int) timeout.toSeconds()).exec();
+            c.stopContainerCmd(name).withTimeout(timeoutSecs).exec();
         } catch (NotModifiedException nm) {
             // Container exited between our inspect and the stop call (HTTP 304). Benign.
             log.info("Container {} exited before stop completed", name);

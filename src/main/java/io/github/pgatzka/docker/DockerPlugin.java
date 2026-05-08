@@ -25,6 +25,9 @@ import org.gradle.api.provider.Provider;
 
 public class DockerPlugin implements Plugin<Project> {
 
+    /** Plugin id used to scope the shared {@link DockerService} so it can't collide with other plugins. */
+    static final String DOCKER_SERVICE_NAME = "io.github.pgatzka.docker.DockerService";
+
     @Override
     public void apply(Project project) {
         DockerExtension ext = project.getExtensions()
@@ -39,35 +42,40 @@ public class DockerPlugin implements Plugin<Project> {
                         project.getObjects().domainObjectContainer(NetworkSpec.class, name -> project.getObjects()
                                 .newInstance(NetworkSpec.class, name)));
 
-        project.getGradle().getSharedServices().registerIfAbsent("docker", DockerService.class, spec -> {});
+        project.getGradle().getSharedServices().registerIfAbsent(DOCKER_SERVICE_NAME, DockerService.class, spec -> {});
 
         ext.getVolumes().all(spec -> {
             project.getTasks().register(Names.createVolumeTask(spec.getName()), CreateVolumeTask.class, t -> {
+                t.setDescription("Creates Docker volume '" + spec.getName() + "'.");
                 t.getVolumeName().set(spec.getName());
                 t.getDriver().set(spec.getDriver());
                 t.getDriverOpts().set(spec.getDriverOpts());
                 t.getLabels().set(spec.getLabels());
             });
-            project.getTasks()
-                    .register(Names.removeVolumeTask(spec.getName()), RemoveVolumeTask.class, t -> t.getVolumeName()
-                            .set(spec.getName()));
+            project.getTasks().register(Names.removeVolumeTask(spec.getName()), RemoveVolumeTask.class, t -> {
+                t.setDescription("Removes Docker volume '" + spec.getName() + "'.");
+                t.getVolumeName().set(spec.getName());
+            });
         });
 
         ext.getNetworks().all(spec -> {
             project.getTasks().register(Names.createNetworkTask(spec.getName()), CreateNetworkTask.class, t -> {
+                t.setDescription("Creates Docker network '" + spec.getName() + "'.");
                 t.getNetworkName().set(spec.getName());
                 t.getDriver().set(spec.getDriver());
                 t.getLabels().set(spec.getLabels());
                 t.getInternal().set(spec.getInternal());
                 t.getAttachable().set(spec.getAttachable());
             });
-            project.getTasks()
-                    .register(Names.removeNetworkTask(spec.getName()), RemoveNetworkTask.class, t -> t.getNetworkName()
-                            .set(spec.getName()));
+            project.getTasks().register(Names.removeNetworkTask(spec.getName()), RemoveNetworkTask.class, t -> {
+                t.setDescription("Removes Docker network '" + spec.getName() + "'.");
+                t.getNetworkName().set(spec.getName());
+            });
         });
 
         ext.getContainers().all(spec -> {
             project.getTasks().register(Names.startTask(spec.getName()), StartContainerTask.class, t -> {
+                t.setDescription("Starts Docker container '" + spec.getName() + "'.");
                 t.getContainerName().set(spec.getContainerName());
                 t.getImage().set(spec.getImage());
                 t.getEnvironment().set(spec.getEnvironment());
@@ -97,14 +105,14 @@ public class DockerPlugin implements Plugin<Project> {
             });
 
             project.getTasks().register(Names.stopTask(spec.getName()), StopContainerTask.class, t -> {
+                t.setDescription("Stops Docker container '" + spec.getName() + "'.");
                 t.getContainerName().set(spec.getContainerName());
                 t.getStopTimeout().set(spec.getStopTimeout());
             });
-            project.getTasks()
-                    .register(
-                            Names.removeContainerTask(spec.getName()),
-                            RemoveContainerTask.class,
-                            t -> t.getContainerName().set(spec.getContainerName()));
+            project.getTasks().register(Names.removeContainerTask(spec.getName()), RemoveContainerTask.class, t -> {
+                t.setDescription("Removes Docker container '" + spec.getName() + "'.");
+                t.getContainerName().set(spec.getContainerName());
+            });
         });
 
         project.afterEvaluate(p -> Validation.validate(ext));

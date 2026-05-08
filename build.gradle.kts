@@ -104,11 +104,16 @@ tasks {
         }
     }
     jacocoTestReport {
+        // Include coverage data from both unit and functional test suites so the report
+        // and the Sonar XML upload reflect the full picture.
+        executionData.from(
+            fileTree(layout.buildDirectory).include("jacoco/test.exec", "jacoco/functionalTest.exec"),
+        )
         reports {
             xml.required.set(true)
             html.required.set(true)
         }
-        mustRunAfter(test)
+        mustRunAfter(test, named("functionalTest"))
     }
     named<org.sonarqube.gradle.SonarTask>("sonar") {
         dependsOn(jacocoTestReport)
@@ -138,7 +143,7 @@ gradlePlugin {
             implementationClass = "io.github.pgatzka.docker.DockerPlugin"
             displayName = "Docker Gradle Plugin"
             description = "Declare Docker containers, named volumes, and named networks in your Gradle build."
-            tags.set(listOf("docker", "containers", "integration-testing", "codegen", "code-generation"))
+            tags.set(listOf("docker", "containers", "integration-testing"))
         }
     }
     testSourceSets(sourceSets["functionalTest"])

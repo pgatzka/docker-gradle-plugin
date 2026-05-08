@@ -4,19 +4,21 @@ import java.util.regex.Pattern;
 
 public final class Names {
 
-    private static final Pattern VALID = Pattern.compile("[A-Za-z0-9_-]+");
+    // Matches Docker resource name characters (letters, digits, _, -, .). Each separator
+    // (`_`, `-`, `.`) becomes a word boundary in the camelCased task name.
+    private static final Pattern VALID = Pattern.compile("[A-Za-z0-9._-]+");
 
     private Names() {}
 
     public static String toCamel(String specName) {
         if (specName == null || !VALID.matcher(specName).matches()) {
-            throw new IllegalArgumentException("Invalid spec name '" + specName + "'. Allowed: [A-Za-z0-9_-]+");
+            throw new IllegalArgumentException("Invalid spec name '" + specName + "'. Allowed: [A-Za-z0-9._-]+");
         }
         StringBuilder sb = new StringBuilder(specName.length());
         boolean upper = true;
         for (int i = 0; i < specName.length(); i++) {
             char c = specName.charAt(i);
-            if (c == '_' || c == '-') {
+            if (c == '_' || c == '-' || c == '.') {
                 upper = true;
                 continue;
             }
@@ -42,22 +44,22 @@ public final class Names {
     }
 
     public static String removeContainerTask(String n) {
-        return TaskType.REMOVE.name().toLowerCase() + toCamel(n);
+        return TaskType.REMOVE.name().toLowerCase() + "Container" + toCamel(n);
     }
 
     public static String createVolumeTask(String n) {
-        return TaskType.CREATE.name().toLowerCase() + toCamel(n);
+        return TaskType.CREATE.name().toLowerCase() + "Volume" + toCamel(n);
     }
 
     public static String removeVolumeTask(String n) {
-        return TaskType.REMOVE.name().toLowerCase() + toCamel(n);
+        return TaskType.REMOVE.name().toLowerCase() + "Volume" + toCamel(n);
     }
 
     public static String createNetworkTask(String n) {
-        return TaskType.CREATE.name().toLowerCase() + toCamel(n);
+        return TaskType.CREATE.name().toLowerCase() + "Network" + toCamel(n);
     }
 
     public static String removeNetworkTask(String n) {
-        return TaskType.REMOVE.name().toLowerCase() + toCamel(n);
+        return TaskType.REMOVE.name().toLowerCase() + "Network" + toCamel(n);
     }
 }
