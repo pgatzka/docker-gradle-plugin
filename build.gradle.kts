@@ -47,9 +47,9 @@ sonar {
         val test by getting(JvmTestSuite::class) {
             useJUnitJupiter("5.10.2")
             dependencies {
-                implementation("org.assertj:assertj-core:3.25.3")
-                implementation("org.mockito:mockito-core:5.11.0")
-                implementation("org.mockito:mockito-junit-jupiter:5.11.0")
+                implementation(libs.assertj)
+                implementation(libs.mockito)
+                implementation(libs.mockito.jupiter)
                 implementation(gradleTestKit())
             }
         }
@@ -58,9 +58,9 @@ sonar {
             useJUnitJupiter("5.10.2")
             dependencies {
                 implementation(project())
-                implementation("com.github.docker-java:docker-java:3.7.1")
-                implementation("com.github.docker-java:docker-java-transport-httpclient5:3.7.1")
-                implementation("org.assertj:assertj-core:3.25.3")
+                implementation(libs.docker.java)
+                implementation(libs.docker.java.transport)
+                implementation(libs.assertj)
                 implementation(gradleTestKit())
             }
             targets {

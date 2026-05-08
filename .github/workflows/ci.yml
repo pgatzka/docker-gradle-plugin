@@ -100,7 +100,7 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
       - name: Verify Coverage
-        run: ./gradlew clean test jacocoTestReport
+        run: ./gradlew clean check jacocoTestReport
       - name: Upload coverage reports
         if: always()
         uses: actions/upload-artifact@v4
