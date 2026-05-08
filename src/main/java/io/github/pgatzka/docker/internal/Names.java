@@ -51,6 +51,8 @@ public final class Names {
     }
 
     /**
+     * Build the start-container task name for a container spec.
+     *
      * @param specName the container spec name
      * @return the {@code startXxx} task name for the container
      * @throws IllegalArgumentException if {@code specName} is null or contains illegal chars
@@ -60,6 +62,8 @@ public final class Names {
     }
 
     /**
+     * Build the stop-container task name for a container spec.
+     *
      * @param specName the container spec name
      * @return the {@code stopXxx} task name for the container
      * @throws IllegalArgumentException if {@code specName} is null or contains illegal chars
@@ -69,6 +73,8 @@ public final class Names {
     }
 
     /**
+     * Build the remove-container task name for a container spec.
+     *
      * @param specName the container spec name
      * @return the {@code removeContainerXxx} task name for the container
      * @throws IllegalArgumentException if {@code specName} is null or contains illegal chars
@@ -78,6 +84,8 @@ public final class Names {
     }
 
     /**
+     * Build the create-volume task name for a volume spec.
+     *
      * @param specName the volume spec name
      * @return the {@code createVolumeXxx} task name for the volume
      * @throws IllegalArgumentException if {@code specName} is null or contains illegal chars
@@ -87,6 +95,8 @@ public final class Names {
     }
 
     /**
+     * Build the remove-volume task name for a volume spec.
+     *
      * @param specName the volume spec name
      * @return the {@code removeVolumeXxx} task name for the volume
      * @throws IllegalArgumentException if {@code specName} is null or contains illegal chars
@@ -96,6 +106,8 @@ public final class Names {
     }
 
     /**
+     * Build the create-network task name for a network spec.
+     *
      * @param specName the network spec name
      * @return the {@code createNetworkXxx} task name for the network
      * @throws IllegalArgumentException if {@code specName} is null or contains illegal chars
@@ -105,6 +117,8 @@ public final class Names {
     }
 
     /**
+     * Build the remove-network task name for a network spec.
+     *
      * @param specName the network spec name
      * @return the {@code removeNetworkXxx} task name for the network
      * @throws IllegalArgumentException if {@code specName} is null or contains illegal chars

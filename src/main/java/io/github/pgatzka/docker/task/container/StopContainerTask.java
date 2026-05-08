@@ -22,6 +22,9 @@ import org.gradle.api.tasks.UntrackedTask;
 @UntrackedTask(because = "Docker daemon side effects must always run")
 public abstract class StopContainerTask extends DockerTask {
 
+    /** Invoked by Gradle's bytecode-decorated subclass; not for direct use. */
+    public StopContainerTask() {}
+
     static void run(DockerClient client, String containerName, Duration timeout, Logger log) {
         InspectContainerResponse inspect;
         try {

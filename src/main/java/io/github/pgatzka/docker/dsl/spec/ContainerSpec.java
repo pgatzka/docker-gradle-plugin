@@ -21,6 +21,11 @@ public abstract class ContainerSpec implements Named {
 
     private final String name;
 
+    /**
+     * Mutable builder collecting volume and bind mounts declared via {@link #mounts(Action)}.
+     *
+     * @return the mounts builder
+     */
     private final Mounts mounts = new Mounts();
 
     /**

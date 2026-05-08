@@ -34,7 +34,7 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.UntrackedTask;
 
 /**
- * Starts a Docker container according to its {@link io.github.pgatzka.docker.dsl.ContainerSpec}.
+ * Starts a Docker container according to its {@link io.github.pgatzka.docker.dsl.spec.ContainerSpec}.
  * Pulls the image (subject to the configured {@link PullPolicy}), creates the container if it
  * does not yet exist, starts it, and blocks until the configured {@link Waitable} readiness
  * strategy is satisfied.
@@ -48,6 +48,9 @@ public abstract class StartContainerTask extends DockerTask {
     private static final Duration PULL_TIMEOUT = Duration.ofMinutes(5);
     private static final Duration READINESS_POLL_INTERVAL = Duration.ofMillis(500);
     private static final String LOOPBACK = "127.0.0.1";
+
+    /** Invoked by Gradle's bytecode-decorated subclass; not for direct use. */
+    public StartContainerTask() {}
 
     static void run(DockerClient client, StartContainerTaskParams params, Logger log) {
         pullIfNeeded(client, params.image(), params.pullPolicy(), log);
