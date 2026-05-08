@@ -30,12 +30,12 @@ public class DockerPlugin implements Plugin<Project> {
                         DockerExtension.class,
                         "docker",
                         DockerExtensionImpl.class,
-                        project.container(ContainerSpec.class, name -> project.getObjects()
+                        project.getObjects().domainObjectContainer(ContainerSpec.class, name -> project.getObjects()
                                 .newInstance(ContainerSpec.class, name)),
-                        project.container(
-                                VolumeSpec.class, name -> project.getObjects().newInstance(VolumeSpec.class, name)),
-                        project.container(
-                                NetworkSpec.class, name -> project.getObjects().newInstance(NetworkSpec.class, name)));
+                        project.getObjects().domainObjectContainer(VolumeSpec.class, name -> project.getObjects()
+                                .newInstance(VolumeSpec.class, name)),
+                        project.getObjects().domainObjectContainer(NetworkSpec.class, name -> project.getObjects()
+                                .newInstance(NetworkSpec.class, name)));
 
         project.getGradle().getSharedServices().registerIfAbsent("docker", DockerService.class, spec -> {});
 
