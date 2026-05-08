@@ -30,4 +30,11 @@ tasks {
         dependsOn("startPostgresCodegen")
         finalizedBy("stopPostgresCodegen")
     }
+    register("codegenFails") {
+        dependsOn("startPostgresCodegen")
+        finalizedBy("stopPostgresCodegen")
+        doLast {
+            throw GradleException("simulated codegen failure")
+        }
+    }
 }
