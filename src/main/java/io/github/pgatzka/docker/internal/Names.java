@@ -26,31 +26,38 @@ public final class Names {
         return sb.toString();
     }
 
+    enum TaskType {
+        START,
+        STOP,
+        REMOVE,
+        CREATE
+    }
+
     public static String startTask(String n) {
-        return "start" + toCamel(n);
+        return TaskType.START.name().toLowerCase() + toCamel(n);
     }
 
     public static String stopTask(String n) {
-        return "stop" + toCamel(n);
+        return TaskType.STOP.name().toLowerCase() + toCamel(n);
     }
 
     public static String removeContainerTask(String n) {
-        return "remove" + toCamel(n);
+        return TaskType.REMOVE.name().toLowerCase() + toCamel(n);
     }
 
     public static String createVolumeTask(String n) {
-        return "create" + toCamel(n);
+        return TaskType.CREATE.name().toLowerCase() + toCamel(n);
     }
 
     public static String removeVolumeTask(String n) {
-        return "remove" + toCamel(n);
+        return TaskType.REMOVE.name().toLowerCase() + toCamel(n);
     }
 
     public static String createNetworkTask(String n) {
-        return "create" + toCamel(n);
+        return TaskType.CREATE.name().toLowerCase() + toCamel(n);
     }
 
     public static String removeNetworkTask(String n) {
-        return "remove" + toCamel(n);
+        return TaskType.REMOVE.name().toLowerCase() + toCamel(n);
     }
 }

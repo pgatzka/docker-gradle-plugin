@@ -27,11 +27,12 @@ public abstract class CreateVolumeTask extends DockerTask {
             return;
         }
         log.info("Creating volume {}", name);
-        CreateVolumeCmd cmd = c.createVolumeCmd().withName(name).withDriver(driver);
-        if (!opts.isEmpty()) cmd.withDriverOpts(opts);
-        if (!labels.isEmpty()) cmd.withLabels(labels);
-        cmd.exec();
-        log.info("Created volume {}", name);
+        try (CreateVolumeCmd cmd = c.createVolumeCmd().withName(name).withDriver(driver)) {
+            if (!opts.isEmpty()) cmd.withDriverOpts(opts);
+            if (!labels.isEmpty()) cmd.withLabels(labels);
+            cmd.exec();
+            log.info("Created volume {}", name);
+        }
     }
 
     @Input

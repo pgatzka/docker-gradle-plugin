@@ -28,14 +28,15 @@ public abstract class CreateNetworkTask extends DockerTask {
             return;
         }
         log.info("Creating network {}", name);
-        CreateNetworkCmd cmd = c.createNetworkCmd()
+        try (CreateNetworkCmd cmd = c.createNetworkCmd()
                 .withName(name)
                 .withDriver(driver)
                 .withInternal(internal)
-                .withAttachable(attachable);
-        if (!labels.isEmpty()) cmd.withLabels(labels);
-        cmd.exec();
-        log.info("Created network {}", name);
+                .withAttachable(attachable)) {
+            if (!labels.isEmpty()) cmd.withLabels(labels);
+            cmd.exec();
+            log.info("Created network {}", name);
+        }
     }
 
     @Input

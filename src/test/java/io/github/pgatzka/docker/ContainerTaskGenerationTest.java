@@ -3,11 +3,10 @@ package io.github.pgatzka.docker;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.pgatzka.docker.dsl.DockerExtension;
+import java.util.List;
 import org.gradle.api.Task;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
 
 class ContainerTaskGenerationTest {
 

@@ -42,8 +42,7 @@ class StartContainerTaskTest {
         // Image inspect: no healthcheck
         InspectImageCmd insImg = mock(InspectImageCmd.class);
         InspectImageResponse insImgResp = mock(InspectImageResponse.class);
-        ContainerConfig cfg =
-                mock(ContainerConfig.class);
+        ContainerConfig cfg = mock(ContainerConfig.class);
         when(c.inspectImageCmd("postgres:18-alpine")).thenReturn(insImg);
         when(insImg.exec()).thenReturn(insImgResp);
         when(insImgResp.getConfig()).thenReturn(cfg);

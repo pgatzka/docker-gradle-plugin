@@ -8,11 +8,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import lombok.extern.slf4j.Slf4j;
 import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+@Slf4j
 class HelloWorldFunctionalTest {
 
     @TempDir
@@ -50,6 +52,7 @@ class HelloWorldFunctionalTest {
             try {
                 c.removeContainerCmd("hello").withForce(true).exec();
             } catch (Exception ignored) {
+                log.debug("Ignoring exception", ignored);
             }
 
             GradleRunner.create()

@@ -3,12 +3,11 @@ package io.github.pgatzka.docker.internal;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.pgatzka.docker.dsl.DockerExtension;
+import java.util.List;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
 
 class ValidationTest {
 

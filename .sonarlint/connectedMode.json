@@ -1,0 +1,5 @@
+{
+    "sonarCloudOrganization": "pgatzka",
+    "projectKey": "io.github.pgatzka.docker:docker-gradle-plugin",
+    "region": "EU"
+}

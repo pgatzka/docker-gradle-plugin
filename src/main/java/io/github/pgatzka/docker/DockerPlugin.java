@@ -14,13 +14,12 @@ import io.github.pgatzka.docker.task.network.CreateNetworkTask;
 import io.github.pgatzka.docker.task.network.RemoveNetworkTask;
 import io.github.pgatzka.docker.task.volume.CreateVolumeTask;
 import io.github.pgatzka.docker.task.volume.RemoveVolumeTask;
+import java.util.ArrayList;
+import java.util.List;
+import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-
-import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
 
 public class DockerPlugin implements Plugin<Project> {
 
@@ -47,7 +46,9 @@ public class DockerPlugin implements Plugin<Project> {
                 t.getDriverOpts().set(spec.getDriverOpts());
                 t.getLabels().set(spec.getLabels());
             });
-            project.getTasks().register(Names.removeVolumeTask(spec.getName()), RemoveVolumeTask.class, t -> t.getVolumeName().set(spec.getName()));
+            project.getTasks()
+                    .register(Names.removeVolumeTask(spec.getName()), RemoveVolumeTask.class, t -> t.getVolumeName()
+                            .set(spec.getName()));
         });
 
         ext.getNetworks().all(spec -> {
@@ -58,7 +59,9 @@ public class DockerPlugin implements Plugin<Project> {
                 t.getInternal().set(spec.getInternal());
                 t.getAttachable().set(spec.getAttachable());
             });
-            project.getTasks().register(Names.removeNetworkTask(spec.getName()), RemoveNetworkTask.class, t -> t.getNetworkName().set(spec.getName()));
+            project.getTasks()
+                    .register(Names.removeNetworkTask(spec.getName()), RemoveNetworkTask.class, t -> t.getNetworkName()
+                            .set(spec.getName()));
         });
 
         ext.getContainers().all(spec -> {
@@ -92,7 +95,11 @@ public class DockerPlugin implements Plugin<Project> {
                 t.getContainerName().set(spec.getContainerName());
                 t.getStopTimeout().set(spec.getStopTimeout());
             });
-            project.getTasks().register(Names.removeContainerTask(spec.getName()), RemoveContainerTask.class, t -> t.getContainerName().set(spec.getContainerName()));
+            project.getTasks()
+                    .register(
+                            Names.removeContainerTask(spec.getName()),
+                            RemoveContainerTask.class,
+                            t -> t.getContainerName().set(spec.getContainerName()));
         });
 
         project.afterEvaluate(p -> Validation.validate(ext));

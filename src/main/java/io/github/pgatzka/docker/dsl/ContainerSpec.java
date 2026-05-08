@@ -2,12 +2,14 @@ package io.github.pgatzka.docker.dsl;
 
 import java.time.Duration;
 import javax.inject.Inject;
+import lombok.Getter;
 import org.gradle.api.Action;
 import org.gradle.api.Named;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 
+@Getter
 public abstract class ContainerSpec implements Named {
 
     private final String name;
@@ -22,11 +24,6 @@ public abstract class ContainerSpec implements Named {
         getWaitTimeout().convention(Duration.ofSeconds(60));
         getStopTimeout().convention(Duration.ofSeconds(10));
         getPullPolicy().convention(PullPolicy.IF_NOT_PRESENT);
-    }
-
-    @Override
-    public String getName() {
-        return name;
     }
 
     public abstract Property<String> getImage();
@@ -48,10 +45,6 @@ public abstract class ContainerSpec implements Named {
     public abstract Property<Duration> getStopTimeout();
 
     public abstract Property<PullPolicy> getPullPolicy();
-
-    public Mounts getMounts() {
-        return mounts;
-    }
 
     public void mounts(Action<? super Mounts> action) {
         action.execute(mounts);

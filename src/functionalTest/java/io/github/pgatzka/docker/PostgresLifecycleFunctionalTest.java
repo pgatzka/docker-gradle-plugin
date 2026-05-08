@@ -8,11 +8,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import lombok.extern.slf4j.Slf4j;
 import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+@Slf4j
 class PostgresLifecycleFunctionalTest {
 
     @TempDir
@@ -47,10 +49,12 @@ class PostgresLifecycleFunctionalTest {
             try {
                 c.removeContainerCmd("pg_test").withForce(true).exec();
             } catch (Exception ignored) {
+                log.debug("Ignoring exception", ignored);
             }
             try {
                 c.removeVolumeCmd("pg_data").exec();
             } catch (Exception ignored) {
+                log.debug("Ignoring exception", ignored);
             }
             try {
                 c.listNetworksCmd().exec().stream()
@@ -58,6 +62,7 @@ class PostgresLifecycleFunctionalTest {
                         .findFirst()
                         .ifPresent(n -> c.removeNetworkCmd(n.getId()).exec());
             } catch (Exception ignored) {
+                log.debug("Ignoring exception", ignored);
             }
 
             GradleRunner.create()
