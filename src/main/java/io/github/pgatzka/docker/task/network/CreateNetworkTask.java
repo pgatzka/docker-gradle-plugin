@@ -11,6 +11,12 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.UntrackedTask;
 
+/**
+ * Creates a Docker network according to its {@link io.github.pgatzka.docker.dsl.NetworkSpec}.
+ * <p>Idempotent: a no-op when a network with the same name already exists (driver, internal,
+ * attachable, and labels are not reconciled). Marked {@link UntrackedTask} because the daemon
+ * side effect must always run.
+ */
 @UntrackedTask(because = "Docker daemon side effects must always run")
 public abstract class CreateNetworkTask extends DockerTask {
 
@@ -40,21 +46,52 @@ public abstract class CreateNetworkTask extends DockerTask {
         }
     }
 
+    /**
+     * Mirrors {@code NetworkSpec.name}: the network name registered on the daemon.
+     *
+     * @return the network name property
+     */
     @Input
     public abstract Property<String> getNetworkName();
 
+    /**
+     * Mirrors {@code NetworkSpec.driver}: the network driver (e.g. {@code bridge}).
+     *
+     * @return the network driver property
+     */
     @Input
     public abstract Property<String> getDriver();
 
+    /**
+     * Mirrors {@code NetworkSpec.labels}: labels applied to the network on the daemon.
+     *
+     * @return the labels property
+     */
     @Input
     public abstract MapProperty<String, String> getLabels();
 
+    /**
+     * Mirrors {@code NetworkSpec.internal}: when {@code true}, the network is isolated from
+     * external networks.
+     *
+     * @return the internal flag property
+     */
     @Input
     public abstract Property<Boolean> getInternal();
 
+    /**
+     * Mirrors {@code NetworkSpec.attachable}: when {@code true}, standalone containers may
+     * attach to this network.
+     *
+     * @return the attachable flag property
+     */
     @Input
     public abstract Property<Boolean> getAttachable();
 
+    /**
+     * Gradle entry point for this task. Delegates to the package-private
+     * {@link #run(DockerClient, String, String, Map, boolean, boolean, Logger)} helper.
+     */
     @TaskAction
     public void execute() {
         run(

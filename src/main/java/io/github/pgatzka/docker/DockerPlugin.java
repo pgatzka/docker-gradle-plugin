@@ -22,11 +22,25 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Provider;
 
+/**
+ * Entry point for the {@code io.github.pgatzka.docker} Gradle plugin. Creates the
+ * {@code docker {}} extension, registers the shared {@link DockerService}, and registers
+ * lifecycle tasks (start/stop/remove containers, create/remove volumes and networks) per
+ * declared spec. Cross-spec validation is deferred to {@code project.afterEvaluate(...)}.
+ */
 public class DockerPlugin implements Plugin<Project> {
 
     /** Plugin id used to scope the shared {@link DockerService} so it can't collide with other plugins. */
     static final String DOCKER_SERVICE_NAME = "io.github.pgatzka.docker.DockerService";
 
+    /**
+     * Apply the plugin to {@code project}: install the {@code docker} extension, register the
+     * shared {@link DockerService}, and register tasks for each declared container, volume,
+     * and network. Container start tasks auto-depend on the create tasks of any volumes and
+     * networks they reference.
+     *
+     * @param project the project to apply the plugin to
+     */
     @Override
     public void apply(Project project) {
         DockerExtension ext = project.getExtensions()

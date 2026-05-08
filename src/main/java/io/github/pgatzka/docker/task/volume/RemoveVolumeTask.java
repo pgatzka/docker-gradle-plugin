@@ -8,6 +8,11 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.UntrackedTask;
 
+/**
+ * Removes a Docker named volume by name.
+ * <p>Idempotent: a no-op when the volume is absent. Marked {@link UntrackedTask} because the
+ * daemon side effect must always run.
+ */
 @UntrackedTask(because = "Docker daemon side effects must always run")
 public abstract class RemoveVolumeTask extends DockerTask {
 
@@ -23,9 +28,18 @@ public abstract class RemoveVolumeTask extends DockerTask {
         log.info("Removed volume {}", volumeName);
     }
 
+    /**
+     * Mirrors {@code VolumeSpec.name}: the volume name to remove.
+     *
+     * @return the volume name property
+     */
     @Input
     public abstract Property<String> getVolumeName();
 
+    /**
+     * Gradle entry point for this task. Delegates to the package-private
+     * {@link #run(DockerClient, String, Logger)} helper.
+     */
     @TaskAction
     public void execute() {
         run(getDockerService().get().getClient(), getVolumeName().get(), getLogger());

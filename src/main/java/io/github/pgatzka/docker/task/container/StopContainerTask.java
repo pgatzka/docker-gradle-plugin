@@ -12,6 +12,13 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.UntrackedTask;
 
+/**
+ * Stops a running Docker container, waiting up to the configured timeout for graceful
+ * shutdown before the daemon escalates to SIGKILL.
+ * <p>Idempotent: a no-op when the container is absent or already stopped, and tolerates the
+ * benign race where the container exits between the inspect and stop calls. Marked
+ * {@link UntrackedTask} because the daemon side effect must always run.
+ */
 @UntrackedTask(because = "Docker daemon side effects must always run")
 public abstract class StopContainerTask extends DockerTask {
 
@@ -42,12 +49,27 @@ public abstract class StopContainerTask extends DockerTask {
         log.info("Stopped container {}", containerName);
     }
 
+    /**
+     * Mirrors {@code ContainerSpec.name}: the container name on the daemon.
+     *
+     * @return the container name property
+     */
     @Input
     public abstract Property<String> getContainerName();
 
+    /**
+     * Mirrors {@code ContainerSpec.stopTimeout}: the grace period before the daemon escalates
+     * to SIGKILL.
+     *
+     * @return the stop timeout property
+     */
     @Input
     public abstract Property<Duration> getStopTimeout();
 
+    /**
+     * Gradle entry point for this task. Delegates to the package-private
+     * {@link #run(DockerClient, String, Duration, Logger)} helper.
+     */
     @TaskAction
     public void execute() {
         run(

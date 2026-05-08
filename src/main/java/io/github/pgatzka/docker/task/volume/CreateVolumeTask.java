@@ -11,6 +11,12 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.UntrackedTask;
 
+/**
+ * Creates a Docker named volume according to its {@link io.github.pgatzka.docker.dsl.VolumeSpec}.
+ * <p>Idempotent: a no-op when a volume with the same name already exists (driver and options
+ * are not reconciled). Marked {@link UntrackedTask} because the daemon side effect must always
+ * run.
+ */
 @UntrackedTask(because = "Docker daemon side effects must always run")
 public abstract class CreateVolumeTask extends DockerTask {
 
@@ -37,18 +43,42 @@ public abstract class CreateVolumeTask extends DockerTask {
         }
     }
 
+    /**
+     * Mirrors {@code VolumeSpec.name}: the volume name registered on the daemon.
+     *
+     * @return the volume name property
+     */
     @Input
     public abstract Property<String> getVolumeName();
 
+    /**
+     * Mirrors {@code VolumeSpec.driver}: the volume driver (e.g. {@code local}).
+     *
+     * @return the volume driver property
+     */
     @Input
     public abstract Property<String> getDriver();
 
+    /**
+     * Mirrors {@code VolumeSpec.driverOpts}: driver-specific options forwarded to the daemon.
+     *
+     * @return the driver options property
+     */
     @Input
     public abstract MapProperty<String, String> getDriverOpts();
 
+    /**
+     * Mirrors {@code VolumeSpec.labels}: labels applied to the volume on the daemon.
+     *
+     * @return the labels property
+     */
     @Input
     public abstract MapProperty<String, String> getLabels();
 
+    /**
+     * Gradle entry point for this task. Delegates to the package-private
+     * {@link #run(DockerClient, String, String, Map, Map, Logger)} helper.
+     */
     @TaskAction
     public void execute() {
         run(

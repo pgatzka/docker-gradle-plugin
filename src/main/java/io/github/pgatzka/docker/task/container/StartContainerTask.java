@@ -33,6 +33,15 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.UntrackedTask;
 
+/**
+ * Starts a Docker container according to its {@link io.github.pgatzka.docker.dsl.ContainerSpec}.
+ * Pulls the image (subject to the configured {@link PullPolicy}), creates the container if it
+ * does not yet exist, starts it, and blocks until the configured {@link Waitable} readiness
+ * strategy is satisfied.
+ * <p>Idempotent against re-runs: an existing running container is left alone, and a stopped
+ * container with the same name is reused rather than recreated. Marked {@link UntrackedTask}
+ * because the daemon side effect must always run.
+ */
 @UntrackedTask(because = "Docker daemon side effects must always run")
 public abstract class StartContainerTask extends DockerTask {
 
@@ -327,44 +336,103 @@ public abstract class StartContainerTask extends DockerTask {
         return text.isEmpty() ? text : Character.toUpperCase(text.charAt(0)) + text.substring(1);
     }
 
+    /**
+     * Mirrors {@code ContainerSpec.name}: the container name registered on the daemon.
+     *
+     * @return the container name property
+     */
     @Input
     public abstract Property<String> getContainerName();
 
+    /**
+     * Mirrors {@code ContainerSpec.image}: the image reference (e.g. {@code postgres:16-alpine}).
+     *
+     * @return the image reference property
+     */
     @Input
     public abstract Property<String> getImage();
 
     /**
-     * Container environment values. Marked {@code @Internal} on purpose: env values commonly
-     * carry secrets and we do not want them fingerprinted into Gradle's task input snapshot or
-     * surfaced in build scans / cache snapshots.
+     * Container environment values, mirroring {@code ContainerSpec.env}. Marked
+     * {@code @Internal} on purpose: env values commonly carry secrets and we do not want them
+     * fingerprinted into Gradle's task input snapshot or surfaced in build scans / cache
+     * snapshots.
+     *
+     * @return the environment map property
      */
     @Internal
     public abstract MapProperty<String, String> getEnvironment();
 
+    /**
+     * Mirrors {@code ContainerSpec.ports}: host port to container port mappings.
+     *
+     * @return the port mappings property
+     */
     @Input
     public abstract MapProperty<Integer, Integer> getPorts();
 
+    /**
+     * Mirrors {@code ContainerSpec.networks}: declared networks; the first becomes the
+     * container's primary network and any remaining ones are attached after creation.
+     *
+     * @return the networks property
+     */
     @Input
     public abstract ListProperty<String> getNetworks();
 
+    /**
+     * Mirrors {@code ContainerSpec.command}: override for the image's CMD, or empty to keep
+     * the image default.
+     *
+     * @return the command override property
+     */
     @Input
     public abstract ListProperty<String> getCommand();
 
+    /**
+     * Mirrors {@code ContainerSpec.volumeMounts}: named-volume mounts to attach.
+     *
+     * @return the volume mounts property
+     */
     @Input
     public abstract ListProperty<VolumeMount> getVolumeMounts();
 
+    /**
+     * Mirrors {@code ContainerSpec.bindMounts}: host-path bind mounts to attach.
+     *
+     * @return the bind mounts property
+     */
     @Input
     public abstract ListProperty<BindMount> getBindMounts();
 
+    /**
+     * Mirrors {@code ContainerSpec.waitFor}: the readiness strategy applied after start.
+     *
+     * @return the readiness strategy property
+     */
     @Input
     public abstract Property<Waitable> getWaitFor();
 
+    /**
+     * Mirrors {@code ContainerSpec.waitTimeout}: maximum time to wait for readiness.
+     *
+     * @return the readiness timeout property
+     */
     @Input
     public abstract Property<Duration> getWaitTimeout();
 
+    /**
+     * Mirrors {@code ContainerSpec.pullPolicy}: when (if ever) to pull the image before start.
+     *
+     * @return the pull policy property
+     */
     @Input
     public abstract Property<PullPolicy> getPullPolicy();
 
+    /**
+     * Gradle entry point for this task. Delegates to the package-private
+     * {@link #run(DockerClient, StartContainerTaskParams, Logger)} helper.
+     */
     @TaskAction
     public void execute() {
         run(
