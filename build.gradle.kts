@@ -4,7 +4,7 @@ plugins {
     id("java-gradle-plugin")
     id("com.gradle.plugin-publish") version "2.1.1"
     id("com.diffplug.spotless") version "8.4.0"
-    id("org.sonarqube") version "7.3.0.8198"
+    id("org.sonarqube") version "7.3.1.8318"
     id("jvm-test-suite")
     id("jacoco")
 }
