@@ -3,7 +3,7 @@ plugins {
     id("io.freefair.lombok") version "9.5.0"
     id("java-gradle-plugin")
     id("com.gradle.plugin-publish") version "2.1.1"
-    id("com.diffplug.spotless") version "8.4.0"
+    id("com.diffplug.spotless") version "8.9.0"
     id("org.sonarqube") version "7.3.0.8198"
     id("jvm-test-suite")
     id("jacoco")
